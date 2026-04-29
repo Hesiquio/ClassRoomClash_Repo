@@ -63,6 +63,9 @@ class WheelMixin:
             s[0] for s in lb_data if s[0] not in recent_students
         ]
 
+        if not hasattr(self.state, 'excluded_students'):
+            self.state.excluded_students = []
+
         lb_frame = tk.Frame(left_panel, bg=BG_CARD,
                             highlightbackground="#CED4DA", highlightthickness=1)
         lb_frame.pack(fill="both", expand=True, pady=(0, 10))
@@ -81,7 +84,8 @@ class WheelMixin:
         scrollbar.config(command=self.student_listbox.yview)
 
         for student in all_students[:30]:
-            self.student_listbox.insert("end", student)
+            display_name = f"🚫 {student}" if student in self.state.excluded_students else student
+            self.student_listbox.insert("end", display_name)
         
         # Pre-seleccionar si ya tenemos un ganador del primer giro
         if hasattr(self.state, 'selected_student') and self.state.selected_student:
@@ -93,6 +97,19 @@ class WheelMixin:
                 if all_students: self.student_listbox.select_set(0)
         elif all_students:
             self.student_listbox.select_set(0)
+
+        def _toggle_exclusion():
+            sel = self.student_listbox.curselection()
+            if not sel: return
+            student = all_students[:30][sel[0]]
+            if student in self.state.excluded_students:
+                self.state.excluded_students.remove(student)
+            else:
+                self.state.excluded_students.append(student)
+            self.show_wheel_screen()
+
+        self._make_btn(left_panel, "🚫 Excluir / Reintegrar", _toggle_exclusion, 
+                       color="#6C757D", hover="#495057", px=10, py=8).pack(fill="x", pady=5)
 
         # ── Panel derecho: tómbola de texto ───────────────────────────────
         right_panel = tk.Frame(body, bg=BG_MAIN)
@@ -181,29 +198,33 @@ class WheelMixin:
 
     def spin_wheel(self):
         """Gira la tómbola para elegir un alumno."""
-        if not self.state.students:
-            messagebox.showwarning("Error", "No hay estudiantes en el grupo.")
+        if not hasattr(self.state, 'excluded_students'):
+            self.state.excluded_students = []
+
+        available_students = [s for s in self.state.students if s not in self.state.excluded_students]
+        if not available_students:
+            messagebox.showwarning("Error", "No hay estudiantes disponibles (todos excluidos o grupo vacío).")
             return
         
         # Preparar datos de tómbola
-        self.wheel_sections_data = self.state.students[:]
+        self.wheel_sections_data = available_students[:]
         
         self.btn_spin_wheel.config(state="disabled", bg="#ADB5BD")
-        winner = random.choice(self.state.students)
+        winner = random.choice(available_students)
         self._animate_wheel_spin(winner, 30)
 
     def _show_point_assignment_dialog(self, student):
         """Muestra un cuadro flotante para asignar puntos manualmente."""
         win = tk.Toplevel(self)
         win.title(f"Puntos para {student}")
-        win.geometry("350x450")
+        win.geometry("380x580")
         win.configure(bg=BG_CARD)
         win.transient(self)
         win.grab_set()
         
         # Centrar en pantalla
         win.update_idletasks()
-        w, h = 350, 450
+        w, h = 380, 580
         x = self.winfo_x() + (self.winfo_width() // 2) - (w // 2)
         y = self.winfo_y() + (self.winfo_height() // 2) - (h // 2)
         win.geometry(f"+{x}+{y}")
@@ -232,6 +253,24 @@ class WheelMixin:
                             command=lambda v=val: points_var.set(str(int(points_var.get() or 0) + v)))
             btn.grid(row=i//2, column=i%2, padx=5, pady=5)
 
+        def _set_zero():
+            points_var.set("0")
+
+        self._make_btn(quick_frame, "0 Pts (Participó)", _set_zero, 
+                       color="#FCA311", hover="#E8920C", px=20, py=6, font=self.f_body).grid(row=3, column=0, columnspan=2, pady=(15, 5))
+
+        def _exclude_and_close():
+            if not hasattr(self.state, 'excluded_students'):
+                self.state.excluded_students = []
+            if student not in self.state.excluded_students:
+                self.state.excluded_students.append(student)
+            win.destroy()
+            self.show_wheel_screen()
+            self.wheel_result_lbl.config(text=f"{student} Excluido", fg="#FF4D4D")
+
+        self._make_btn(quick_frame, "🚫 Excluir de Ruleta", _exclude_and_close, 
+                       color="#EF233C", hover="#D90429", px=20, py=6, font=self.f_small).grid(row=4, column=0, columnspan=2, pady=(5, 10))
+
         def _confirm(event=None):
             try:
                 pts = int(points_var.get())
@@ -247,7 +286,12 @@ class WheelMixin:
                 messagebox.showerror("Error", "Ingresa un número válido.")
 
         win.bind("<Return>", _confirm)
-        self._make_btn(win, "Confirmar Puntos", _confirm, color=BTN_PRIMARY, px=30, py=10).pack(pady=20)
+        
+        bottom_frame = tk.Frame(win, bg=BG_CARD)
+        bottom_frame.pack(fill="both", expand=True, pady=(0, 20))
+        
+        self._make_btn(bottom_frame, "Confirmar Puntos", _confirm, 
+                       color=BTN_PRIMARY, px=30, py=12).pack(pady=10)
 
     def _animate_wheel_spin(self, final_result, frame):
         """Anima el cambio de nombres tipo tómbola."""
