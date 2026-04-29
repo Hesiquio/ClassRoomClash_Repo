@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+ENV/
+
+# Base de datos local
+*.db
+*.sqlite3
+
+# PyInstaller
+build/
+dist/
+*.spec
+classroom_clash_icon.ico
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store
+build_exe.py
