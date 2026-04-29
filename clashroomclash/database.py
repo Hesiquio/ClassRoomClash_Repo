@@ -76,6 +76,12 @@ class DatabaseManager:
                 except sqlite3.OperationalError:
                     pass # Ya existe o la tabla es nueva y ya lo tiene
 
+                # Migración: Añadir is_archived a groups
+                try:
+                    c.execute('ALTER TABLE groups ADD COLUMN is_archived INTEGER DEFAULT 0')
+                except sqlite3.OperationalError:
+                    pass
+
                 # Tabla de entregas (registra el orden)
                 c.execute('''
                     CREATE TABLE IF NOT EXISTS activity_submissions (
@@ -117,11 +123,14 @@ class DatabaseManager:
                 ''', (name, students_json, num_teams, teams_json, notes, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
                 return c.lastrowid
 
-    def get_groups(self) -> List[Tuple[int, str, str]]:
+    def get_groups(self, include_archived: bool = False) -> List[Tuple[int, str, str, bool]]:
         """Retorna todos los grupos guardados."""
         with closing(sqlite3.connect(self.db_path)) as conn:
             c = conn.cursor()
-            c.execute('SELECT id, name, created_at FROM groups ORDER BY created_at DESC')
+            if include_archived:
+                c.execute('SELECT id, name, created_at, is_archived FROM groups ORDER BY created_at DESC')
+            else:
+                c.execute('SELECT id, name, created_at, is_archived FROM groups WHERE is_archived = 0 ORDER BY created_at DESC')
             return c.fetchall()
 
     def load_group(self, group_id: int) -> Optional[Dict[str, Any]]:
@@ -129,21 +138,36 @@ class DatabaseManager:
         with closing(sqlite3.connect(self.db_path)) as conn:
             c = conn.cursor()
             c.execute(
-                'SELECT name, students, num_teams, teams, notes FROM groups WHERE id = ?',
+                'SELECT name, students, num_teams, teams, notes, is_archived FROM groups WHERE id = ?',
                 (group_id,)
             )
             row = c.fetchone()
 
         if row:
-            name, students_json, num_teams, teams_json, notes = row
+            name, students_json, num_teams, teams_json, notes, is_archived = row
             return {
                 'name': name,
                 'students': json.loads(students_json),
                 'num_teams': num_teams,
                 'teams': json.loads(teams_json),
                 'notes': notes,
+                'is_archived': bool(is_archived),
             }
         return None
+
+    def rename_group(self, group_id: int, new_name: str) -> None:
+        """Renombra un grupo."""
+        with closing(sqlite3.connect(self.db_path)) as conn:
+            with conn:
+                c = conn.cursor()
+                c.execute('UPDATE groups SET name = ? WHERE id = ?', (new_name, group_id))
+
+    def toggle_archive_group(self, group_id: int, archive: bool) -> None:
+        """Archiva o desarchiva un grupo."""
+        with closing(sqlite3.connect(self.db_path)) as conn:
+            with conn:
+                c = conn.cursor()
+                c.execute('UPDATE groups SET is_archived = ? WHERE id = ?', (1 if archive else 0, group_id))
 
     def delete_group(self, group_id: int) -> None:
         """Elimina un grupo."""
@@ -329,8 +353,20 @@ class DatabaseManager:
             return c.fetchall()
 
     def update_submission_time(self, submission_id: int, new_time: str) -> None:
-        """Actualiza la hora de una entrega específica."""
         with closing(sqlite3.connect(self.db_path)) as conn:
             with conn:
                 c = conn.cursor()
                 c.execute('UPDATE activity_submissions SET submitted_at = ? WHERE id = ?', (new_time, submission_id))
+
+    def delete_activity(self, activity_id: int) -> None:
+        with closing(sqlite3.connect(self.db_path)) as conn:
+            with conn:
+                c = conn.cursor()
+                c.execute('DELETE FROM activity_submissions WHERE activity_id = ?', (activity_id,))
+                c.execute('DELETE FROM activities WHERE id = ?', (activity_id,))
+
+    def delete_submission(self, submission_id: int) -> None:
+        with closing(sqlite3.connect(self.db_path)) as conn:
+            with conn:
+                c = conn.cursor()
+                c.execute('DELETE FROM activity_submissions WHERE id = ?', (submission_id,))

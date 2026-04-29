@@ -86,6 +86,11 @@ class ScreensMixin:
         tk.Label(hdr, text="Tus Grupos y Herramientas",
                  font=self.f_small, bg=BG_HEADER, fg=TEXT_MUTED).pack(pady=(3, 0))
 
+        help_msg = "Bienvenido a ClassRoom Clash.\n\nEn esta pantalla puedes administrar tus grupos escolares. Cada grupo es un espacio separado con sus propios alumnos, historial de puntos, y actividades.\n\nAcciones:\n- Crea grupos nuevos arriba.\n- Gestiona un grupo existente para abrir sorteos, ruletas o tareas.\n- Accede al historial global al final de la pantalla."
+        help_btn = tk.Frame(hdr, bg=BG_HEADER)
+        help_btn.place(relx=0.97, rely=0.5, anchor="e")
+        self._make_btn(help_btn, "❓ Ayuda", lambda: self._show_help_dialog("Menú Principal", help_msg), color="#4361EE", px=10, py=5, font=self.f_small).pack()
+
         body = tk.Frame(self.container, bg=BG_MAIN, padx=40, pady=20)
         body.pack(fill="both", expand=True)
 
@@ -94,10 +99,18 @@ class ScreensMixin:
                        color="#06D6A0", px=20, py=12, font=self.f_title).pack(pady=(0, 25))
 
         # Lista de Grupos
-        tk.Label(body, text="MIS GRUPOS:",
-                 font=self.f_title, bg=BG_MAIN, fg=TEXT_DARK).pack(anchor="w", pady=(0, 10))
+        list_hdr = tk.Frame(body, bg=BG_MAIN)
+        list_hdr.pack(fill="x", pady=(0, 10))
+        tk.Label(list_hdr, text="MIS GRUPOS:",
+                 font=self.f_title, bg=BG_MAIN, fg=TEXT_DARK).pack(side="left")
+        
+        if not hasattr(self, 'show_archived_toggle'):
+            self.show_archived_toggle = tk.BooleanVar(value=False)
+        
+        tk.Checkbutton(list_hdr, text="Mostrar Archivados", variable=self.show_archived_toggle,
+                       command=self.show_main_menu, bg=BG_MAIN, font=self.f_small, fg=TEXT_MUTED).pack(side="right")
 
-        groups = self.db.get_groups()
+        groups = self.db.get_groups(include_archived=self.show_archived_toggle.get())
 
         if not groups:
             tk.Label(body, text="No hay grupos guardados aún. Crea uno para empezar.",
@@ -107,20 +120,31 @@ class ScreensMixin:
             scroll_frame.pack(fill="both", expand=True)
             sf = scroll_frame.view
 
-            for group_id, group_name, created_at in groups:
-                card = tk.Frame(sf, bg=BG_CARD, highlightbackground="#DEE2E6", 
+            for group_id, group_name, created_at, is_archived in groups:
+                bg_color = "#E9ECEF" if is_archived else BG_CARD
+                card = tk.Frame(sf, bg=bg_color, highlightbackground="#DEE2E6", 
                                 highlightthickness=1, padx=15, pady=10)
                 card.pack(fill="x", pady=5)
 
-                info = tk.Frame(card, bg=BG_CARD)
+                info = tk.Frame(card, bg=bg_color)
                 info.pack(side="left", fill="both", expand=True)
-                tk.Label(info, text=group_name, font=self.f_name, bg=BG_CARD, fg=TEXT_DARK).pack(anchor="w")
-                tk.Label(info, text=f"Creado: {created_at}", font=self.f_small, bg=BG_CARD, fg=TEXT_MUTED).pack(anchor="w")
+                
+                title_text = f"{group_name} {'(Archivado)' if is_archived else ''}"
+                tk.Label(info, text=title_text, font=self.f_name, bg=bg_color, fg=TEXT_DARK).pack(anchor="w")
+                tk.Label(info, text=f"Creado: {created_at}", font=self.f_small, bg=bg_color, fg=TEXT_MUTED).pack(anchor="w")
 
-                bc = tk.Frame(card, bg=BG_CARD)
+                bc = tk.Frame(card, bg=bg_color)
                 bc.pack(side="right")
+
                 self._make_btn(bc, "Gestionar →", lambda gid=group_id: self.show_group_dashboard(gid),
                                color="#4361EE", px=15, py=6, font=self.f_small).pack(side="left", padx=3)
+
+                arch_text = "📦 Restaurar" if is_archived else "📦 Archivar"
+                self._make_btn(bc, arch_text, lambda gid=group_id, arch=is_archived: self._toggle_archive(gid, not arch),
+                               color="#6C757D", hover="#495057", px=10, py=6, font=self.f_small).pack(side="left", padx=3)
+
+                self._make_btn(bc, "✏️ Renombrar", lambda gid=group_id, gname=group_name: self._rename_group_prompt(gid, gname),
+                               color="#FFCA3A", hover="#FFB703", px=10, py=6, font=self.f_small).pack(side="left", padx=3)
                 
                 self._make_btn(bc, "🗑️", lambda gid=group_id: self._delete_group_confirm(gid),
                                color="#EF233C", px=10, py=6, font=self.f_small).pack(side="left", padx=3)
@@ -157,6 +181,11 @@ class ScreensMixin:
         hdr.pack(fill="x")
         tk.Label(hdr, text=f"📂  GRUPO: {data['name']}",
                  font=self.f_header, bg=BG_HEADER, fg=TEXT_LIGHT).pack()
+
+        help_msg = "Panel de Control del Grupo.\n\nEste es el centro de mando. Desde aquí puedes interactuar de múltiples formas con tu clase:\n\n1. Sorteo: Forma equipos balanceados al instante.\n2. Tómbola: Elige alumnos al azar para responder.\n3. Actividades: Registra el orden en que los alumnos terminan tareas.\n4. Leaderboard: Mira quién lleva más puntos."
+        help_btn = tk.Frame(hdr, bg=BG_HEADER)
+        help_btn.place(relx=0.97, rely=0.5, anchor="e")
+        self._make_btn(help_btn, "❓ Ayuda", lambda: self._show_help_dialog("Dashboard del Grupo", help_msg), color="#4361EE", px=10, py=5, font=self.f_small).pack()
         
         body = tk.Frame(self.container, bg=BG_MAIN, padx=40, pady=30)
         body.pack(fill="both", expand=True)
@@ -225,8 +254,21 @@ class ScreensMixin:
 
     def _delete_group_confirm(self, group_id):
         """Confirma la eliminación de un grupo."""
-        if messagebox.askyesno("Confirmar", "¿Eliminar este grupo?"):
+        if messagebox.askyesno("Confirmar", "⚠️ ¿Estás completamente seguro de eliminar este grupo y TODO su historial? Esta acción no se puede deshacer."):
             self.db.delete_group(group_id)
+            self.show_main_menu()
+
+    def _rename_group_prompt(self, group_id, current_name):
+        from tkinter import simpledialog
+        new_name = simpledialog.askstring("Renombrar", f"Nuevo nombre para '{current_name}':", initialvalue=current_name)
+        if new_name and new_name.strip() != current_name:
+            self.db.rename_group(group_id, new_name.strip())
+            self.show_main_menu()
+
+    def _toggle_archive(self, group_id, archive):
+        msg = "¿Archivar este grupo? Dejará de verse en la lista principal." if archive else "¿Restaurar este grupo?"
+        if messagebox.askyesno("Confirmar", msg):
+            self.db.toggle_archive_group(group_id, archive)
             self.show_main_menu()
 
     def _edit_group_students(self, group_id):

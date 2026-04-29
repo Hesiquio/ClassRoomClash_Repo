@@ -28,6 +28,11 @@ class ActivitiesMixin:
         tk.Label(hdr, text=f"📋  ACTIVIDADES: {group_name.upper()}",
                  font=self.f_header, bg=BG_HEADER, fg=TEXT_LIGHT).pack()
 
+        help_msg = "Control de Actividades.\n\nAquí puedes crear tareas o actividades para llevar un registro del orden en que los alumnos las terminan.\n\n- Usa 'Registrar Entregas' durante la clase para ir marcando a los alumnos conforme acaben.\n- Usa 'Ver Ranking' para ver la clasificación final y editar tiempos si fue necesario."
+        help_btn = tk.Frame(hdr, bg=BG_HEADER)
+        help_btn.place(relx=0.97, rely=0.5, anchor="e")
+        self._make_btn(help_btn, "❓ Ayuda", lambda: self._show_help_dialog("Control de Actividades", help_msg), color="#4361EE", px=10, py=5, font=self.f_small).pack()
+
         body = tk.Frame(self.container, bg=BG_MAIN, padx=30, pady=20)
         body.pack(fill="both", expand=True)
 
@@ -86,6 +91,10 @@ class ActivitiesMixin:
                 self._make_btn(btn_frame, "✏️", 
                                lambda a=aid, n=name: self._edit_activity_dialog(a, n),
                                color="#4361EE", px=8, py=5, font=self.f_small).pack(side="left", padx=2)
+
+                self._make_btn(btn_frame, "🗑️", 
+                               lambda a=aid: self._delete_activity_confirm(a, target_group_id),
+                               color="#EF233C", hover="#D90429", px=8, py=5, font=self.f_small).pack(side="left", padx=2)
 
         back_cmd = lambda: self.show_group_dashboard(target_group_id) if target_group_id else self.show_main_menu
         self._make_btn(body, "← Volver", back_cmd,
@@ -251,6 +260,10 @@ class ActivitiesMixin:
                 tk.Label(info_row, text=time.split(' ')[1] if ' ' in time else time, 
                          font=self.f_small, bg=BG_CARD, fg=TEXT_MUTED).pack(side="left", expand=True)
                 
+                self._make_btn(info_row, "🗑️", 
+                               lambda s=sid, a=activity_id, n=activity_name: self._delete_submission_confirm(s, a, n),
+                               color="#EF233C", hover="#D90429", px=4, py=1, font=self.f_small).pack(side="right", padx=2)
+
                 self._make_btn(info_row, "✏️", 
                                lambda s=sid, t=time, a=activity_id, n=activity_name: self._edit_submission_time_dialog(s, t, a, n),
                                color="#6C757D", px=4, py=1, font=self.f_small).pack(side="right")
@@ -268,3 +281,13 @@ class ActivitiesMixin:
         if new_time and new_time != current_time:
             self.db.update_submission_time(submission_id, new_time)
             self.show_activity_ranking(aid, aname)
+
+    def _delete_activity_confirm(self, activity_id, target_group_id):
+        if messagebox.askyesno("Confirmar", "⚠️ ¿Estás seguro de eliminar esta actividad y TODAS sus entregas?"):
+            self.db.delete_activity(activity_id)
+            self.show_activities_menu(target_group_id)
+
+    def _delete_submission_confirm(self, submission_id, activity_id, activity_name):
+        if messagebox.askyesno("Confirmar", "¿Eliminar esta entrega? El alumno podrá registrarla nuevamente."):
+            self.db.delete_submission(submission_id)
+            self.show_activity_ranking(activity_id, activity_name)

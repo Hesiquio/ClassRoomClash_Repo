@@ -48,8 +48,30 @@ class ClassRoomClashApp(ScreensMixin, SorteoScreenMixin, WheelMixin, ActivitiesM
         # ── Estado de la aplicación ───────────────────────────────────────
         self.state = AppState()
 
-        # ── Contenedor maestro ────────────────────────────────────────────
         self.container = tk.Frame(self, bg=BG_MAIN)
         self.container.pack(fill="both", expand=True)
 
         self.show_main_menu()
+
+    def _show_help_dialog(self, title: str, message: str):
+        """Muestra un cuadro de diálogo con información y contexto sobre la vista actual."""
+        win = tk.Toplevel(self)
+        win.title(f"Ayuda: {title}")
+        win.geometry("500x350")
+        win.configure(bg="#FFFFFF")
+        win.transient(self)
+        win.grab_set()
+
+        win.update_idletasks()
+        w, h = 500, 350
+        x = self.winfo_x() + (self.winfo_width() // 2) - (w // 2)
+        y = self.winfo_y() + (self.winfo_height() // 2) - (h // 2)
+        win.geometry(f"+{x}+{y}")
+
+        tk.Label(win, text=f"ℹ️ {title}", font=self.f_title, bg="#FFFFFF", fg="#2B2D42", pady=15).pack(fill="x")
+
+        msg_lbl = tk.Label(win, text=message, font=self.f_body, bg="#FFFFFF", fg="#495057", 
+                           justify="left", wraplength=450, anchor="nw")
+        msg_lbl.pack(fill="both", expand=True, padx=25, pady=10)
+
+        self._make_btn(win, "Entendido", win.destroy, color="#4361EE", px=20, py=10).pack(pady=20)
