@@ -70,18 +70,26 @@ class SorteoScreenMixin:
         btn_zone = tk.Frame(self.container, bg=BG_MAIN, pady=12)
         btn_zone.pack(fill="x")
 
+        self.auto_sorteo_active = False
+
         self.btn_reveal = self._make_btn(
-            btn_zone, "🔮   REVELAR SIGUIENTE INTEGRANTE",
-            self.reveal_next, color=BTN_REVEAL, hover=BTN_REVEAL_H, px=36, py=14,
+            btn_zone, "🔮   Revelar (Manual)",
+            self.reveal_next, color=BTN_REVEAL, hover=BTN_REVEAL_H, px=20, py=14,
         )
-        self.btn_reveal.pack(side="left", expand=True, padx=(20, 5))
+        self.btn_reveal.pack(side="left", expand=True, padx=(10, 5))
+
+        self.btn_auto = self._make_btn(
+            btn_zone, "⚡   Auto-Sorteo",
+            self.toggle_auto_sorteo, color="#FF9F1C", px=20, py=14,
+        )
+        self.btn_auto.pack(side="left", expand=True, padx=(5, 5))
 
         back_cmd = lambda: self.show_group_dashboard(self.state.current_group_id) if getattr(self.state, 'current_group_id', None) else self.show_main_menu
         self.btn_cancel_sorteo = self._make_btn(
             btn_zone, "🏠   Abandonar Sorteo",
             back_cmd, color="#6C757D", hover="#495057", px=20, py=14,
         )
-        self.btn_cancel_sorteo.pack(side="left", expand=True, padx=(5, 20))
+        self.btn_cancel_sorteo.pack(side="left", expand=True, padx=(5, 10))
 
         # ── Grid de tarjetas de equipo ────────────────────────────────────
         grid_frame = tk.Frame(self.container, bg=BG_MAIN)
@@ -133,6 +141,17 @@ class SorteoScreenMixin:
     #  LÓGICA DE ANIMACIÓN
     # =========================================================================
 
+    def toggle_auto_sorteo(self):
+        """Alterna el modo de sorteo automático."""
+        if self.auto_sorteo_active:
+            self.auto_sorteo_active = False
+            self.btn_auto.config(text="⚡   Auto-Sorteo", bg="#FF9F1C")
+        else:
+            self.auto_sorteo_active = True
+            self.btn_auto.config(text="🛑   Detener Auto", bg="#EF233C")
+            if not self.state.is_animating:
+                self.reveal_next()
+
     def reveal_next(self):
         """Punto de entrada: deshabilita el botón e inicia la animación."""
         if self.state.is_animating or self.state.student_index >= len(self.state.students):
@@ -140,7 +159,12 @@ class SorteoScreenMixin:
 
         self.state.is_animating = True
         self.btn_reveal.config(state="disabled", bg="#ADB5BD")
-        self._run_slot_anim(frame=0, total=34, init_delay=42)
+        
+        if getattr(self, 'auto_sorteo_active', False):
+            # Animación más rápida para el modo automático
+            self._run_slot_anim(frame=0, total=15, init_delay=20)
+        else:
+            self._run_slot_anim(frame=0, total=34, init_delay=42)
 
     def _run_slot_anim(self, frame, total, init_delay):
         """
@@ -212,14 +236,16 @@ class SorteoScreenMixin:
         )
 
         if self.state.student_index >= len(self.state.students):
+            self.auto_sorteo_active = False
             self._finish()
         else:
             self.slot_lbl.config(text="¿ Quién será el siguiente ?", fg=SLOT_TEXT)
-            self.slot_sub.config(text="Presiona el botón para revelar", fg=TEXT_MUTED)
+            self.slot_sub.config(text="Presiona el botón o espera al automático", fg=TEXT_MUTED)
             self.state.is_animating = False
             self.btn_reveal.config(state="normal", bg=BTN_REVEAL)
-            self.btn_reveal.bind("<Enter>", lambda e: self.btn_reveal.config(bg=BTN_REVEAL_H))
-            self.btn_reveal.bind("<Leave>", lambda e: self.btn_reveal.config(bg=BTN_REVEAL))
+            
+            if getattr(self, 'auto_sorteo_active', False):
+                self.after(1000, self.reveal_next)
 
     def _finish(self):
         """Pantalla final cuando todos los alumnos han sido asignados."""
@@ -227,6 +253,8 @@ class SorteoScreenMixin:
         self.slot_lbl.config(text="🏆  ¡SORTEO COMPLETADO!  🏆", fg=ACCENT_GOLD)
         self.slot_sub.config(text="¡Que gane el mejor equipo! 🎉", fg=ACCENT_GOLD)
         self.btn_reveal.config(state="disabled", text="✅   ¡Todos asignados!", bg="#06D6A0")
+        if hasattr(self, 'btn_auto') and self.btn_auto.winfo_exists():
+            self.btn_auto.config(state="disabled", bg="#6C757D")
 
         group_name = getattr(self.state, 'current_group_name', 'Sorteo')
         self.db.save_draw_history(group_name, self.state.teams, group_id=self.state.current_group_id)
