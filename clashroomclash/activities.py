@@ -10,6 +10,7 @@ from .constants import (
     BG_MAIN, BG_CARD, BG_HEADER, BTN_PRIMARY, BTN_HOVER,
     TEXT_DARK, TEXT_LIGHT, TEXT_MUTED, ACCENT_GOLD
 )
+from .widgets import ScrollableFrame
 
 class ActivitiesMixin:
     """Mixin para la gestión de actividades y control de entregas."""
@@ -19,8 +20,8 @@ class ActivitiesMixin:
         self._clear()
         
         # Si venimos de un grupo específico, usarlo como contexto
-        target_group_id = group_id or getattr(self, 'current_group_id', None)
-        group_name = getattr(self, 'current_group_name', 'Global') if target_group_id else "Global"
+        target_group_id = group_id or getattr(self.state, 'current_group_id', None)
+        group_name = getattr(self.state, 'current_group_name', 'Global') if target_group_id else "Global"
 
         hdr = tk.Frame(self.container, bg=BG_HEADER, pady=12)
         hdr.pack(fill="x")
@@ -43,18 +44,9 @@ class ActivitiesMixin:
         canvas_wrap = tk.Frame(body, bg=BG_MAIN)
         canvas_wrap.pack(fill="both", expand=True)
 
-        canvas = tk.Canvas(canvas_wrap, bg=BG_MAIN, highlightthickness=0)
-        scrollbar = tk.Scrollbar(canvas_wrap, command=canvas.yview)
-        sf = tk.Frame(canvas, bg=BG_MAIN)
-
-        sf.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        # Hacer que el frame interno use todo el ancho del canvas
-        canvas_window = canvas.create_window((0, 0), window=sf, anchor="nw")
-        canvas.bind("<Configure>", lambda e: canvas.itemconfigure(canvas_window, width=e.width))
-
-        canvas.configure(yscrollcommand=scrollbar.set)
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        scroll_frame = ScrollableFrame(canvas_wrap, bg_color=BG_MAIN)
+        scroll_frame.pack(fill="both", expand=True)
+        sf = scroll_frame.view
 
         try:
             all_activities = self.db.get_activities()
@@ -103,7 +95,7 @@ class ActivitiesMixin:
         """Crea una actividad directamente para el grupo actual."""
         name = simpledialog.askstring("Nueva Actividad", "¿Nombre de la tarea?")
         if name:
-            self.db.create_activity(name, group_id, group_name=getattr(self, 'current_group_name', None))
+            self.db.create_activity(name, group_id, group_name=getattr(self.state, 'current_group_name', None))
             self.show_activities_menu(group_id)
 
     def _create_activity_dialog(self):
@@ -176,17 +168,9 @@ class ActivitiesMixin:
         canvas_wrap = tk.Frame(body, bg=BG_MAIN)
         canvas_wrap.pack(fill="both", expand=True)
 
-        canvas = tk.Canvas(canvas_wrap, bg=BG_MAIN, highlightthickness=0)
-        scrollbar = tk.Scrollbar(canvas_wrap, command=canvas.yview)
-        grid_frame = tk.Frame(canvas, bg=BG_MAIN)
-
-        grid_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        canvas_window = canvas.create_window((0, 0), window=grid_frame, anchor="nw")
-        canvas.bind("<Configure>", lambda e: canvas.itemconfigure(canvas_window, width=e.width))
-
-        canvas.configure(yscrollcommand=scrollbar.set)
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        scroll_frame = ScrollableFrame(canvas_wrap, bg_color=BG_MAIN)
+        scroll_frame.pack(fill="both", expand=True)
+        grid_frame = scroll_frame.view
         
         already_submitted = [r[0] for r in self.db.get_activity_ranking(activity_id)]
 
@@ -239,17 +223,9 @@ class ActivitiesMixin:
             canvas_wrap = tk.Frame(body, bg=BG_MAIN)
             canvas_wrap.pack(fill="both", expand=True)
 
-            canvas = tk.Canvas(canvas_wrap, bg=BG_MAIN, highlightthickness=0)
-            scrollbar = tk.Scrollbar(canvas_wrap, command=canvas.yview)
-            sf_ranking = tk.Frame(canvas, bg=BG_MAIN)
-
-            sf_ranking.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-            canvas_window = canvas.create_window((0, 0), window=sf_ranking, anchor="nw")
-            canvas.bind("<Configure>", lambda e: canvas.itemconfigure(canvas_window, width=e.width))
-
-            canvas.configure(yscrollcommand=scrollbar.set)
-            canvas.pack(side="left", fill="both", expand=True)
-            scrollbar.pack(side="right", fill="y")
+            scroll_frame = ScrollableFrame(canvas_wrap, bg_color=BG_MAIN)
+            scroll_frame.pack(fill="both", expand=True)
+            sf_ranking = scroll_frame.view
 
             cols = 4 # Cuadrícula para ahorrar espacio
             for i, (student, pos, time, sid) in enumerate(ranking):

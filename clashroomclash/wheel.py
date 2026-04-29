@@ -26,15 +26,15 @@ class WheelMixin:
         """
         Muestra la pantalla de la ruleta de selección de alumnos.
         """
-        self.wheel_mode = "student"
+        self.state.wheel_mode = "student"
 
         # Si no hay estudiantes cargados y estamos en modo student, intentar cargar el último grupo
-        if not self.students and self.wheel_mode == "student":
+        if not self.state.students and self.state.wheel_mode == "student":
             groups = self.db.get_groups()
             if groups:
                 data = self.db.load_group(groups[0][0])
-                self.students = data['students']
-                self.current_group_name = data['name']
+                self.state.students = data['students']
+                self.state.current_group_name = data['name']
             else:
                 messagebox.showinfo("Sin datos", "Por favor, crea o selecciona un grupo primero.")
                 self.show_main_menu()
@@ -57,7 +57,7 @@ class WheelMixin:
         tk.Label(left_panel, text="Selecciona un Estudiante:",
                  font=self.f_title, bg=BG_MAIN, fg=TEXT_DARK).pack(pady=10)
 
-        recent_students = set(self.students) if self.students else set()
+        recent_students = set(self.state.students) if self.state.students else set()
         lb_data = self.db.get_leaderboard(100)
         all_students = list(recent_students) + [
             s[0] for s in lb_data if s[0] not in recent_students
@@ -84,9 +84,9 @@ class WheelMixin:
             self.student_listbox.insert("end", student)
         
         # Pre-seleccionar si ya tenemos un ganador del primer giro
-        if hasattr(self, 'selected_student') and self.selected_student:
+        if hasattr(self.state, 'selected_student') and self.state.selected_student:
             try:
-                idx = all_students.index(self.selected_student)
+                idx = all_students.index(self.state.selected_student)
                 self.student_listbox.select_set(idx)
                 self.student_listbox.see(idx)
             except ValueError:
@@ -107,8 +107,8 @@ class WheelMixin:
         slot_frame.pack(pady=20, fill="x")
 
         result_text = "—"
-        if hasattr(self, 'selected_student') and self.selected_student:
-            result_text = self.selected_student
+        if hasattr(self.state, 'selected_student') and self.state.selected_student:
+            result_text = self.state.selected_student
         
         self.wheel_result_lbl = tk.Label(
             slot_frame, text=result_text,
@@ -129,11 +129,11 @@ class WheelMixin:
         self.btn_spin_wheel.pack(fill="x")
 
         # ── Top rápido (Específico del grupo si hay uno cargado) ──────────
-        tk.Label(body, text=f"🏆 Ranking: {getattr(self, 'current_group_name', 'Global')}",
+        tk.Label(body, text=f"🏆 Ranking: {getattr(self.state, 'current_group_name', 'Global')}",
                  font=self.f_name, bg=BG_MAIN, fg=TEXT_DARK).pack(pady=(20, 10))
 
-        if self.students:
-            lb_quick = self.db.get_group_leaderboard(self.students)[:10]
+        if self.state.students:
+            lb_quick = self.db.get_group_leaderboard(self.state.students)[:10]
         else:
             lb_quick = self.db.get_leaderboard(10)
         if lb_quick:
@@ -161,7 +161,7 @@ class WheelMixin:
                        color="#4361EE", px=20, py=8,
                        font=self.f_body).pack(side="left", padx=5)
 
-        back_cmd = lambda: self.show_group_dashboard(self.current_group_id) if getattr(self, 'current_group_id', None) else self.show_main_menu
+        back_cmd = lambda: self.show_group_dashboard(self.state.current_group_id) if getattr(self.state, 'current_group_id', None) else self.show_main_menu
         self._make_btn(footer_btns, "← Volver",
                        back_cmd,
                        color="#6C757D", hover="#495057", px=20, py=8,
@@ -181,15 +181,15 @@ class WheelMixin:
 
     def spin_wheel(self):
         """Gira la tómbola para elegir un alumno."""
-        if not self.students:
+        if not self.state.students:
             messagebox.showwarning("Error", "No hay estudiantes en el grupo.")
             return
         
         # Preparar datos de tómbola
-        self.wheel_sections_data = self.students[:]
+        self.wheel_sections_data = self.state.students[:]
         
         self.btn_spin_wheel.config(state="disabled", bg="#ADB5BD")
-        winner = random.choice(self.students)
+        winner = random.choice(self.state.students)
         self._animate_wheel_spin(winner, 30)
 
     def _show_point_assignment_dialog(self, student):
@@ -236,8 +236,8 @@ class WheelMixin:
             try:
                 pts = int(points_var.get())
                 self.db.add_points(student, pts, 
-                                   group_id=getattr(self, 'current_group_id', None),
-                                   group_name=getattr(self, 'current_group_name', None))
+                                   group_id=getattr(self.state, 'current_group_id', None),
+                                   group_name=getattr(self.state, 'current_group_name', None))
                 win.destroy()
                 self.show_wheel_screen()
                 # Pequeño aviso visual

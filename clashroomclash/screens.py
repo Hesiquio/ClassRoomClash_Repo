@@ -23,6 +23,7 @@ from .constants import (
     TEXT_DARK, TEXT_LIGHT, TEXT_MUTED, ACCENT_GOLD,
     TEAM_COLORS,
 )
+from .widgets import ScrollableFrame
 
 
 class ScreensMixin:
@@ -102,18 +103,9 @@ class ScreensMixin:
             tk.Label(body, text="No hay grupos guardados aún. Crea uno para empezar.",
                      font=self.f_body, bg=BG_MAIN, fg=TEXT_MUTED).pack(pady=20)
         else:
-            container_list = tk.Frame(body, bg=BG_MAIN)
-            container_list.pack(fill="both", expand=True)
-
-            canvas = tk.Canvas(container_list, bg=BG_MAIN, highlightthickness=0)
-            scrollbar = tk.Scrollbar(container_list, command=canvas.yview)
-            sf = tk.Frame(canvas, bg=BG_MAIN)
-
-            sf.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-            canvas_window = canvas.create_window((0, 0), window=sf, anchor="nw")
-            canvas.bind("<Configure>", lambda e: canvas.itemconfigure(canvas_window, width=e.width))
-
-            canvas.configure(yscrollcommand=scrollbar.set)
+            scroll_frame = ScrollableFrame(body, bg_color=BG_MAIN)
+            scroll_frame.pack(fill="both", expand=True)
+            sf = scroll_frame.view
 
             for group_id, group_name, created_at in groups:
                 card = tk.Frame(sf, bg=BG_CARD, highlightbackground="#DEE2E6", 
@@ -132,9 +124,6 @@ class ScreensMixin:
                 
                 self._make_btn(bc, "🗑️", lambda gid=group_id: self._delete_group_confirm(gid),
                                color="#EF233C", px=10, py=6, font=self.f_small).pack(side="left", padx=3)
-
-            canvas.pack(side="left", fill="both", expand=True)
-            scrollbar.pack(side="right", fill="y")
 
         # Footer Global
         tk.Label(body, text="Herramientas Globales",
@@ -160,9 +149,9 @@ class ScreensMixin:
         if not data: return
 
         self._clear()
-        self.current_group_id = group_id
-        self.current_group_name = data['name']
-        self.students = data['students'][:]
+        self.state.current_group_id = group_id
+        self.state.current_group_name = data['name']
+        self.state.students = data['students'][:]
 
         hdr = tk.Frame(self.container, bg=BG_HEADER, pady=20)
         hdr.pack(fill="x")
@@ -177,7 +166,7 @@ class ScreensMixin:
                               highlightbackground="#DEE2E6", highlightthickness=1)
         stats_card.pack(fill="x", pady=(0, 30))
         
-        tk.Label(stats_card, text=f"📊 Resumen: {len(self.students)} alumnos inscritos", 
+        tk.Label(stats_card, text=f"📊 Resumen: {len(self.state.students)} alumnos inscritos", 
                  font=self.f_title, bg=BG_CARD, fg=TEXT_DARK).pack(side="left")
         
         self._make_btn(stats_card, "✏️ Editar Alumnos", 
@@ -224,14 +213,14 @@ class ScreensMixin:
         """Carga un grupo y va directamente al sorteo."""
         data = self.db.load_group(group_id)
         if data:
-            self.students = data['students'][:]
-            random.shuffle(self.students)
-            self.num_teams = data['num_teams']
-            self.teams = [[] for _ in range(self.num_teams)]
-            self.student_index = 0
-            self.assign_index = 0
-            self.is_animating = False
-            self.current_group_id = group_id
+            self.state.students = data['students'][:]
+            random.shuffle(self.state.students)
+            self.state.num_teams = data['num_teams']
+            self.state.teams = [[] for _ in range(self.state.num_teams)]
+            self.state.student_index = 0
+            self.state.assign_index = 0
+            self.state.is_animating = False
+            self.state.current_group_id = group_id
             self.show_sorteo_screen()
 
     def _delete_group_confirm(self, group_id):
@@ -420,15 +409,9 @@ class ScreensMixin:
             tk.Label(body, text="Realiza sorteos, usa la tómbola o crea actividades\npara ver el historial aquí.",
                      font=self.f_body, bg=BG_MAIN, fg=TEXT_MUTED, justify="center").pack()
         else:
-            canvas = tk.Canvas(body, bg=BG_MAIN, highlightthickness=0)
-            scrollbar = tk.Scrollbar(body, command=canvas.yview)
-            sf = tk.Frame(canvas, bg=BG_MAIN)
-
-            sf.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-            canvas_window = canvas.create_window((0, 0), window=sf, anchor="nw")
-            canvas.bind("<Configure>", lambda e: canvas.itemconfigure(canvas_window, width=e.width))
-
-            canvas.configure(yscrollcommand=scrollbar.set)
+            scroll_frame = ScrollableFrame(body, bg_color=BG_MAIN)
+            scroll_frame.pack(fill="both", expand=True)
+            sf = scroll_frame.view
             
             # Iconos por tipo
             icons = {
@@ -457,9 +440,6 @@ class ScreensMixin:
                 if gname:
                     tk.Label(card, text=f"Grupo: {gname}", font=self.f_small, 
                              bg=BG_CARD, fg="#4361EE").pack(anchor="w", padx=(25, 0))
-
-            canvas.pack(side="left", fill="both", expand=True)
-            scrollbar.pack(side="right", fill="y")
 
         tk.Frame(body, height=0, bg=BG_MAIN).pack(pady=10)
         self._make_btn(body, "← Volver al Menú", self.show_main_menu,
@@ -498,8 +478,8 @@ class ScreensMixin:
         if group_id:
             data = self.db.load_group(group_id)
             initial = data['name'] if data else group_options[0]
-        elif hasattr(self, 'current_group_id') and self.current_group_id:
-            data = self.db.load_group(self.current_group_id)
+        elif hasattr(self.state, 'current_group_id') and self.state.current_group_id:
+            data = self.db.load_group(self.state.current_group_id)
             initial = data['name'] if data else group_options[0]
         else:
             initial = group_options[0]
@@ -535,14 +515,9 @@ class ScreensMixin:
             tk.Label(body, text=f"Top Estudiantes — {title_suffix}",
                      font=self.f_title, bg=BG_MAIN, fg=TEXT_DARK).pack(pady=10)
 
-            canvas = tk.Canvas(body, bg=BG_MAIN, highlightthickness=0)
-            scrollbar = tk.Scrollbar(body, command=canvas.yview)
-            sf = tk.Frame(canvas, bg=BG_MAIN)
-
-            sf.bind("<Configure>",
-                    lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-            canvas.create_window((0, 0), window=sf, anchor="nw")
-            canvas.configure(yscrollcommand=scrollbar.set)
+            scroll_frame = ScrollableFrame(body, bg_color=BG_MAIN)
+            scroll_frame.pack(fill="both", expand=True)
+            sf = scroll_frame.view
 
             from tkinter import font as tkfont
             for rank, (name, points, spins) in enumerate(leaderboard, 1):
@@ -562,9 +537,6 @@ class ScreensMixin:
                 tk.Label(card, text=f"{points} pts",
                          font=tkfont.Font(family="Helvetica", size=16, weight="bold"),
                          bg=BG_CARD, fg=ACCENT_GOLD).pack(side="right")
-
-            canvas.pack(side="left", fill="both", expand=True)
-            scrollbar.pack(side="right", fill="y")
 
         tk.Frame(body, height=0, bg=BG_MAIN).pack(pady=10)
         bf = tk.Frame(body, bg=BG_MAIN)
@@ -599,9 +571,9 @@ class ScreensMixin:
         def _on_select(gid):
             data = self.db.load_group(gid)
             if data:
-                self.students = data['students'][:]
-                self.current_group_name = data['name']
-                self.current_group_id = gid
+                self.state.students = data['students'][:]
+                self.state.current_group_name = data['name']
+                self.state.current_group_id = gid
                 self.show_wheel_screen()
 
         self._pick_group_generic(
@@ -658,9 +630,9 @@ class ScreensMixin:
         if not data: return
         
         self._clear()
-        self.current_group_id = group_id
-        self.current_group_name = data['name']
-        self.students = data['students']
+        self.state.current_group_id = group_id
+        self.state.current_group_name = data['name']
+        self.state.students = data['students']
 
         hdr = tk.Frame(self.container, bg=BG_HEADER, pady=18)
         hdr.pack(fill="x")
@@ -675,27 +647,20 @@ class ScreensMixin:
                              highlightbackground="#DEE2E6", highlightthickness=1)
         info_card.pack(fill="x", pady=(0, 30))
         
-        tk.Label(info_card, text=f"Integrantes del grupo ({len(self.students)}):", 
+        tk.Label(info_card, text=f"Integrantes del grupo ({len(self.state.students)}):", 
                  font=self.f_title, bg=BG_CARD, fg=TEXT_DARK).pack(anchor="w")
         
         # Lista de nombres con posibilidad de excluir
         names_wrap = tk.Frame(info_card, bg=BG_CARD)
         names_wrap.pack(fill="both", expand=True, pady=10)
 
-        canvas = tk.Canvas(names_wrap, bg=BG_CARD, height=150, highlightthickness=0)
-        scrollbar = tk.Scrollbar(names_wrap, command=canvas.yview)
-        self.scrollable_names = tk.Frame(canvas, bg=BG_CARD)
-
-        self.scrollable_names.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        canvas.create_window((0, 0), window=self.scrollable_names, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-        
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        scroll_frame = ScrollableFrame(names_wrap, bg_color=BG_CARD, height=150)
+        scroll_frame.pack(fill="both", expand=True)
+        self.scrollable_names = scroll_frame.view
 
         self.student_vars = {}
         cols = 3
-        for i, student in enumerate(sorted(self.students)):
+        for i, student in enumerate(sorted(self.state.students)):
             var = tk.BooleanVar(value=True)
             self.student_vars[student] = var
             
@@ -705,7 +670,7 @@ class ScreensMixin:
                                command=self._refresh_present_count)
             cb.grid(row=i // cols, column=i % cols, sticky="w", padx=10, pady=2)
 
-        self.lbl_present = tk.Label(info_card, text=f"Alumnos presentes: {len(self.students)}", 
+        self.lbl_present = tk.Label(info_card, text=f"Alumnos presentes: {len(self.state.students)}", 
                                     font=self.f_small, bg=BG_CARD, fg=BTN_PRIMARY)
         self.lbl_present.pack(anchor="e")
 
@@ -801,15 +766,15 @@ class ScreensMixin:
             self.lbl_error.config(text="⚠  El máximo es 8 equipos.")
             return
 
-        self.students = names[:]
-        random.shuffle(self.students)
-        self.num_teams = nt
-        self.teams = [[] for _ in range(nt)]
-        self.student_index = 0
-        self.assign_index = 0
-        self.is_animating = False
+        self.state.students = names[:]
+        random.shuffle(self.state.students)
+        self.state.num_teams = nt
+        self.state.teams = [[] for _ in range(nt)]
+        self.state.student_index = 0
+        self.state.assign_index = 0
+        self.state.is_animating = False
         # Mantener el ID del grupo actual para el historial
-        # self.current_group_id ya está configurado en show_config_screen
+        # self.state.current_group_id ya está configurado en show_config_screen
 
         self.show_sorteo_screen()
 

@@ -45,7 +45,7 @@ class SorteoScreenMixin:
         tk.Label(inner, text="🎰  ¡EL SORTEO HA COMENZADO!",
                  font=self.f_header, bg=BG_HEADER, fg=ACCENT_GOLD).pack(side="left", padx=10)
         self.lbl_progress = tk.Label(
-            inner, text=f"0 / {len(self.students)} asignados",
+            inner, text=f"0 / {len(self.state.students)} asignados",
             font=self.f_body, bg=BG_HEADER, fg=TEXT_MUTED,
         )
         self.lbl_progress.pack(side="left", padx=24)
@@ -76,7 +76,7 @@ class SorteoScreenMixin:
         )
         self.btn_reveal.pack(side="left", expand=True, padx=(20, 5))
 
-        back_cmd = lambda: self.show_group_dashboard(self.current_group_id) if getattr(self, 'current_group_id', None) else self.show_main_menu
+        back_cmd = lambda: self.show_group_dashboard(self.state.current_group_id) if getattr(self.state, 'current_group_id', None) else self.show_main_menu
         self.btn_cancel_sorteo = self._make_btn(
             btn_zone, "🏠   Abandonar Sorteo",
             back_cmd, color="#6C757D", hover="#495057", px=20, py=14,
@@ -87,8 +87,8 @@ class SorteoScreenMixin:
         grid_frame = tk.Frame(self.container, bg=BG_MAIN)
         grid_frame.pack(fill="both", expand=True, padx=18, pady=8)
 
-        cols = min(self.num_teams, 4)
-        rows_needed = math.ceil(self.num_teams / cols)
+        cols = min(self.state.num_teams, 4)
+        rows_needed = math.ceil(self.state.num_teams / cols)
         for c in range(cols):
             grid_frame.columnconfigure(c, weight=1)
         for r in range(rows_needed):
@@ -97,7 +97,7 @@ class SorteoScreenMixin:
         self.team_cards = []
         self.team_name_frames = []
 
-        for i in range(self.num_teams):
+        for i in range(self.state.num_teams):
             row = i // cols
             col = i % cols
             color = TEAM_COLORS[i % len(TEAM_COLORS)]
@@ -135,10 +135,10 @@ class SorteoScreenMixin:
 
     def reveal_next(self):
         """Punto de entrada: deshabilita el botón e inicia la animación."""
-        if self.is_animating or self.student_index >= len(self.students):
+        if self.state.is_animating or self.state.student_index >= len(self.state.students):
             return
 
-        self.is_animating = True
+        self.state.is_animating = True
         self.btn_reveal.config(state="disabled", bg="#ADB5BD")
         self._run_slot_anim(frame=0, total=34, init_delay=42)
 
@@ -148,11 +148,11 @@ class SorteoScreenMixin:
         La curva de frenado sube el retardo de 1× a ~4.5× en curva cuadrática.
         """
         if frame >= total:
-            chosen = self.students[self.student_index]
+            chosen = self.state.students[self.state.student_index]
             self._show_climax(chosen)
             return
 
-        self.slot_lbl.config(text=random.choice(self.students), fg=SLOT_TEXT)
+        self.slot_lbl.config(text=random.choice(self.state.students), fg=SLOT_TEXT)
 
         progress = frame / total
         next_delay = int(init_delay * (1 + progress ** 1.6 * 4.5))
@@ -164,7 +164,7 @@ class SorteoScreenMixin:
         """Muestra el nombre real en dorado e inicia el parpadeo de clímax."""
         self.slot_lbl.config(text=name, fg=ACCENT_GOLD)
         self.slot_sub.config(
-            text=f"➤  ¡Se une al  Equipo {self.assign_index + 1}!",
+            text=f"➤  ¡Se une al  Equipo {self.state.assign_index + 1}!",
             fg=ACCENT_GOLD,
         )
         self._blink(name, half_cycles=6, is_visible=False)
@@ -182,13 +182,13 @@ class SorteoScreenMixin:
 
     def _assign_to_team(self, name):
         """Asigna el alumno al equipo actual (round-robin) y actualiza la tarjeta."""
-        idx = self.assign_index
+        idx = self.state.assign_index
         team_color = TEAM_COLORS[idx % len(TEAM_COLORS)]
 
-        self.teams[idx].append(name)
+        self.state.teams[idx].append(name)
 
         nf = self.team_name_frames[idx]
-        if len(self.teams[idx]) == 1:
+        if len(self.state.teams[idx]) == 1:
             for w in nf.winfo_children():
                 w.destroy()
 
@@ -204,36 +204,36 @@ class SorteoScreenMixin:
             highlightbackground=team_color, highlightthickness=2,
         ))
 
-        self.student_index += 1
-        self.assign_index = (self.assign_index + 1) % self.num_teams
+        self.state.student_index += 1
+        self.state.assign_index = (self.state.assign_index + 1) % self.state.num_teams
 
         self.lbl_progress.config(
-            text=f"{self.student_index} / {len(self.students)} asignados",
+            text=f"{self.state.student_index} / {len(self.state.students)} asignados",
         )
 
-        if self.student_index >= len(self.students):
+        if self.state.student_index >= len(self.state.students):
             self._finish()
         else:
             self.slot_lbl.config(text="¿ Quién será el siguiente ?", fg=SLOT_TEXT)
             self.slot_sub.config(text="Presiona el botón para revelar", fg=TEXT_MUTED)
-            self.is_animating = False
+            self.state.is_animating = False
             self.btn_reveal.config(state="normal", bg=BTN_REVEAL)
             self.btn_reveal.bind("<Enter>", lambda e: self.btn_reveal.config(bg=BTN_REVEAL_H))
             self.btn_reveal.bind("<Leave>", lambda e: self.btn_reveal.config(bg=BTN_REVEAL))
 
     def _finish(self):
         """Pantalla final cuando todos los alumnos han sido asignados."""
-        self.is_animating = False
+        self.state.is_animating = False
         self.slot_lbl.config(text="🏆  ¡SORTEO COMPLETADO!  🏆", fg=ACCENT_GOLD)
         self.slot_sub.config(text="¡Que gane el mejor equipo! 🎉", fg=ACCENT_GOLD)
         self.btn_reveal.config(state="disabled", text="✅   ¡Todos asignados!", bg="#06D6A0")
 
-        group_name = getattr(self, 'current_group_name', 'Sorteo')
-        self.db.save_draw_history(group_name, self.teams, group_id=self.current_group_id)
+        group_name = getattr(self.state, 'current_group_name', 'Sorteo')
+        self.db.save_draw_history(group_name, self.state.teams, group_id=self.state.current_group_id)
 
-        if not self.current_group_id:
-            self.current_group_id = self.db.save_group(
-                group_name, self.students, self.num_teams, self.teams,
+        if not self.state.current_group_id:
+            self.state.current_group_id = self.db.save_group(
+                group_name, self.state.students, self.state.num_teams, self.state.teams,
             )
 
         btn_frame = tk.Frame(self.container, bg=BG_MAIN, pady=12)
@@ -248,7 +248,7 @@ class SorteoScreenMixin:
                        self.show_config_screen,
                        color=BTN_PRIMARY, px=30, py=12, font=self.f_btn).pack(side="left", padx=5)
 
-        back_cmd = lambda: self.show_group_dashboard(self.current_group_id) if getattr(self, 'current_group_id', None) else self.show_main_menu
+        back_cmd = lambda: self.show_group_dashboard(self.state.current_group_id) if getattr(self.state, 'current_group_id', None) else self.show_main_menu
 
         self._make_btn(btn_frame, "🏠   Panel del Grupo",
                        back_cmd,

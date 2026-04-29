@@ -12,6 +12,7 @@ from .screens import ScreensMixin
 from .sorteo_screen import SorteoScreenMixin
 from .wheel import WheelMixin
 from .activities import ActivitiesMixin
+from .state import AppState
 
 
 class ClassRoomClashApp(ScreensMixin, SorteoScreenMixin, WheelMixin, ActivitiesMixin, tk.Tk):
@@ -45,13 +46,7 @@ class ClassRoomClashApp(ScreensMixin, SorteoScreenMixin, WheelMixin, ActivitiesM
         self.f_small  = tkfont.Font(family="Helvetica", size=9)
 
         # ── Estado de la aplicación ───────────────────────────────────────
-        self.students         = []
-        self.teams            = []
-        self.num_teams        = 0
-        self.student_index    = 0
-        self.assign_index     = 0
-        self.is_animating     = False
-        self.current_group_id = None
+        self.state = AppState()
 
         # ── Contenedor maestro ────────────────────────────────────────────
         self.container = tk.Frame(self, bg=BG_MAIN)
