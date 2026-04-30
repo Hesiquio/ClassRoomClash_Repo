@@ -33,3 +33,15 @@ TEAM_COLORS = [
 ]
 
 TEAM_EMOJIS = ["⚽", "🏆", "🔥", "⭐", "💎", "🚀", "🎯", "👑"]
+
+# Colores suaves para estados de "completado" o secundarios
+PASTEL_COLORS = [
+    "#E0F2FE", # Azul cielo muy claro
+    "#F0FDF4", # Verde menta claro
+    "#FEF9C3", # Amarillo crema
+    "#FFEDD5", # Naranja pálido
+    "#FCE7F3", # Rosa pastel
+    "#F3E8FF", # Lavanda
+    "#E0E7FF", # Índigo suave
+    "#CCFBF1", # Turquesa claro
+]

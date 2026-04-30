@@ -43,18 +43,16 @@ class ScreensMixin:
             w.destroy()
 
     def _make_btn(self, parent, text, cmd, color=BTN_PRIMARY, hover=BTN_HOVER,
-                  px=24, py=12, font=None, width=None):
+                  px=24, py=12, font=None, width=None, fg=TEXT_LIGHT):
         """
         Crea un botón flat con efecto hover.
-        El hover se implementa con bind <Enter>/<Leave> porque tk.Button
-        no soporta :hover nativo.
         """
         f = font or self.f_btn
         b = tk.Button(
             parent, text=text, command=cmd,
-            bg=color, fg=TEXT_LIGHT, font=f,
+            bg=color, fg=fg, font=f,
             relief="flat", bd=0,
-            activebackground=hover, activeforeground=TEXT_LIGHT,
+            activebackground=hover, activeforeground=fg,
             cursor="hand2", padx=px, pady=py,
         )
         if width:

@@ -191,24 +191,37 @@ class ActivitiesMixin:
         already_submitted = [r[0] for r in self.db.get_activity_ranking(activity_id)]
 
         # Determinar columnas según ancho
-        cols = 4 # Más columnas para aprovechar el ancho
+        cols = 4 
         for i, student in enumerate(sorted(students_list)):
             is_done = student in already_submitted
-            btn_color = "#6C757D" if is_done else BTN_PRIMARY
-            btn_text = f"✅ {student}" if is_done else student
+            from .constants import PASTEL_COLORS
             
-            btn = self._make_btn(grid_frame, btn_text, None, color=btn_color)
-            btn.config(command=lambda b=btn, s=student: self._mark_submission(activity_id, s, b))
+            # Color por defecto si no ha entregado
+            btn_color = BTN_PRIMARY
+            text_color = TEXT_LIGHT
+            btn_text = student
+            
+            if is_done:
+                # Si ya entregó, usar un color pastel de la lista basado en su posición o índice
+                btn_color = PASTEL_COLORS[i % len(PASTEL_COLORS)]
+                text_color = TEXT_DARK
+                btn_text = f"✅ {student}"
+            
+            btn = self._make_btn(grid_frame, btn_text, None, color=btn_color, fg=text_color)
+            btn.config(command=lambda b=btn, s=student, idx=i: self._mark_submission(activity_id, s, b, idx))
             if is_done: btn.config(state="disabled")
             
             btn.grid(row=i // cols, column=i % cols, sticky="nsew", padx=5, pady=5)
         
         for j in range(cols): grid_frame.columnconfigure(j, weight=1)
 
-    def _mark_submission(self, activity_id, student_name, button):
+    def _mark_submission(self, activity_id, student_name, button, student_index):
         pos = self.db.register_submission(activity_id, student_name)
         if pos:
-            button.config(text=f"✅ #{pos} {student_name}", state="disabled", bg="#6C757D")
+            from .constants import PASTEL_COLORS
+            # Cambiar a un color pastel suave y texto oscuro
+            new_bg = PASTEL_COLORS[student_index % len(PASTEL_COLORS)]
+            button.config(text=f"✅ #{pos} {student_name}", state="disabled", bg=new_bg, fg=TEXT_DARK)
         else:
             messagebox.showinfo("Info", "Este alumno ya ha entregado.")
 
