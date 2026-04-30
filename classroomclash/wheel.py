@@ -185,10 +185,11 @@ class WheelMixin:
         footer_btns = tk.Frame(body, bg=BG_MAIN)
         footer_btns.pack()
 
-        self._make_btn(footer_btns, "🔄 Cambiar Grupo",
-                       self._pick_group_for_wheel,
-                       color="#4361EE", px=20, py=8,
-                       font=self.f_body).pack(side="left", padx=5)
+        if not getattr(self.state, 'current_group_id', None):
+            self._make_btn(footer_btns, "🔄 Cambiar Grupo",
+                           self._pick_group_for_wheel,
+                           color="#4361EE", px=20, py=8,
+                           font=self.f_body).pack(side="left", padx=5)
 
         back_cmd = lambda: self.show_group_dashboard(self.state.current_group_id) if getattr(self.state, 'current_group_id', None) else self.show_main_menu
         self._make_btn(footer_btns, "← Volver",
