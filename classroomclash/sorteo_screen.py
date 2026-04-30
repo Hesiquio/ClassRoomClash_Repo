@@ -44,6 +44,11 @@ class SorteoScreenMixin:
         inner.pack()
         tk.Label(inner, text="🎰  ¡EL SORTEO HA COMENZADO!",
                  font=self.f_header, bg=BG_HEADER, fg=ACCENT_GOLD).pack(side="left", padx=10)
+        
+        # Botón Home en el header
+        home_btn_f = tk.Frame(hdr, bg=BG_HEADER)
+        home_btn_f.place(relx=0.03, rely=0.5, anchor="w")
+        self._make_btn(home_btn_f, "🏠 Inicio", self.show_main_menu, color="#4361EE", px=10, py=5, font=self.f_small).pack()
         self.lbl_progress = tk.Label(
             inner, text=f"0 / {len(self.state.students)} asignados",
             font=self.f_body, bg=BG_HEADER, fg=TEXT_MUTED,

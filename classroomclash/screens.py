@@ -84,6 +84,11 @@ class ScreensMixin:
         tk.Label(hdr, text="Tus Grupos y Herramientas",
                  font=self.f_small, bg=BG_HEADER, fg=TEXT_MUTED).pack(pady=(3, 0))
 
+        # Botón Home en el header
+        home_btn_f = tk.Frame(hdr, bg=BG_HEADER)
+        home_btn_f.place(relx=0.03, rely=0.5, anchor="w")
+        self._make_btn(home_btn_f, "🏠 Inicio", self.show_main_menu, color="#4361EE", px=10, py=5, font=self.f_small).pack()
+
         help_msg = (
             "Bienvenido a ClassRoom Clash.\n\n"
             "En esta pantalla puedes administrar tus grupos escolares. Cada grupo es un espacio separado con sus propios alumnos, historial de puntos, y actividades.\n\n"
@@ -188,6 +193,16 @@ class ScreensMixin:
         hdr.pack(fill="x")
         tk.Label(hdr, text=f"📂  GRUPO: {data['name']}",
                  font=self.f_header, bg=BG_HEADER, fg=TEXT_LIGHT).pack()
+
+        # Botón Home en el header
+        home_btn_f = tk.Frame(hdr, bg=BG_HEADER)
+        home_btn_f.place(relx=0.03, rely=0.5, anchor="w")
+        self._make_btn(home_btn_f, "🏠 Inicio", self.show_main_menu, color="#4361EE", px=10, py=5, font=self.f_small).pack()
+
+        # Botón Home en el header
+        home_btn_f = tk.Frame(hdr, bg=BG_HEADER)
+        home_btn_f.place(relx=0.03, rely=0.5, anchor="w")
+        self._make_btn(home_btn_f, "🏠 Inicio", self.show_main_menu, color="#4361EE", px=10, py=5, font=self.f_small).pack()
 
         help_msg = (
             "Panel de Control del Grupo.\n\n"
@@ -338,6 +353,11 @@ class ScreensMixin:
         tk.Label(hdr, text=f"📊  EXPORTAR REPORTE: {data['name']}",
                  font=self.f_header, bg=BG_HEADER, fg=TEXT_LIGHT).pack()
 
+        # Botón Home en el header
+        home_btn_f = tk.Frame(hdr, bg=BG_HEADER)
+        home_btn_f.place(relx=0.03, rely=0.5, anchor="w")
+        self._make_btn(home_btn_f, "🏠 Inicio", self.show_main_menu, color="#4361EE", px=10, py=5, font=self.f_small).pack()
+
         body = tk.Frame(self.container, bg=BG_MAIN, padx=40, pady=30)
         body.pack(fill="both", expand=True)
 
@@ -457,6 +477,11 @@ class ScreensMixin:
         tk.Label(hdr, text="📊  LOG GLOBAL DE ACTIVIDAD",
                  font=self.f_header, bg=BG_HEADER, fg=TEXT_LIGHT).pack()
 
+        # Botón Home en el header
+        home_btn_f = tk.Frame(hdr, bg=BG_HEADER)
+        home_btn_f.place(relx=0.03, rely=0.5, anchor="w")
+        self._make_btn(home_btn_f, "🏠 Inicio", self.show_main_menu, color="#4361EE", px=10, py=5, font=self.f_small).pack()
+
         body = tk.Frame(self.container, bg=BG_MAIN, padx=30, pady=20)
         body.pack(fill="both", expand=True)
 
@@ -517,6 +542,11 @@ class ScreensMixin:
         hdr.pack(fill="x")
         tk.Label(hdr, text="🏆  Leaderboard",
                  font=self.f_header, bg=BG_HEADER, fg=ACCENT_GOLD).pack()
+
+        # Botón Home en el header
+        home_btn_f = tk.Frame(hdr, bg=BG_HEADER)
+        home_btn_f.place(relx=0.03, rely=0.5, anchor="w")
+        self._make_btn(home_btn_f, "🏠 Inicio", self.show_main_menu, color="#4361EE", px=10, py=5, font=self.f_small).pack()
 
         body = tk.Frame(self.container, bg=BG_MAIN, padx=30, pady=20)
         body.pack(fill="both", expand=True)
@@ -697,6 +727,11 @@ class ScreensMixin:
         hdr.pack(fill="x")
         tk.Label(hdr, text=f"🎲  SORTEO: {data['name']}",
                  font=self.f_header, bg=BG_HEADER, fg=TEXT_LIGHT).pack()
+
+        # Botón Home en el header
+        home_btn_f = tk.Frame(hdr, bg=BG_HEADER)
+        home_btn_f.place(relx=0.03, rely=0.5, anchor="w")
+        self._make_btn(home_btn_f, "🏠 Inicio", self.show_main_menu, color="#4361EE", px=10, py=5, font=self.f_small).pack()
 
         body = tk.Frame(self.container, bg=BG_MAIN, padx=40, pady=28)
         body.pack(fill="both", expand=True)

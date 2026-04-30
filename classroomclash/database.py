@@ -366,7 +366,23 @@ class DatabaseManager:
                 c.execute('DELETE FROM activities WHERE id = ?', (activity_id,))
 
     def delete_submission(self, submission_id: int) -> None:
+        """Elimina una entrega y reajusta las posiciones de las siguientes."""
         with closing(sqlite3.connect(self.db_path)) as conn:
             with conn:
                 c = conn.cursor()
+                # 1. Obtener actividad y posición de la entrega a borrar
+                c.execute('SELECT activity_id, position FROM activity_submissions WHERE id = ?', (submission_id,))
+                row = c.fetchone()
+                if not row: return
+                
+                act_id, pos = row
+                
+                # 2. Borrar la entrega
                 c.execute('DELETE FROM activity_submissions WHERE id = ?', (submission_id,))
+                
+                # 3. Reajustar posiciones: todas las que estaban después bajan 1 puesto
+                c.execute('''
+                    UPDATE activity_submissions 
+                    SET position = position - 1 
+                    WHERE activity_id = ? AND position > ?
+                ''', (act_id, pos))

@@ -47,6 +47,11 @@ class WheelMixin:
         tk.Label(hdr, text="🎡  TÓMBOLA CLASH",
                  font=self.f_header, bg=BG_HEADER, fg=ACCENT_GOLD).pack()
 
+        # Botón Home en el header
+        home_btn_f = tk.Frame(hdr, bg=BG_HEADER)
+        home_btn_f.place(relx=0.03, rely=0.5, anchor="w")
+        self._make_btn(home_btn_f, "🏠 Inicio", self.show_main_menu, color="#4361EE", px=10, py=5, font=self.f_small).pack()
+
         help_msg = (
             "Tómbola de Participación.\n\n"
             "Elige alumnos al azar para participar y gamifica la clase.\n\n"
@@ -272,39 +277,58 @@ class WheelMixin:
         self._make_btn(quick_frame, "0 Pts (Participó)", _set_zero, 
                        color="#FCA311", hover="#E8920C", px=20, py=6, font=self.f_body).grid(row=3, column=0, columnspan=2, pady=(15, 5))
 
-        def _exclude_and_close():
-            if not hasattr(self.state, 'excluded_students'):
-                self.state.excluded_students = []
-            if student not in self.state.excluded_students:
-                self.state.excluded_students.append(student)
-            win.destroy()
-            self.show_wheel_screen()
-            self.wheel_result_lbl.config(text=f"{student} Excluido", fg="#FF4D4D")
-
-        self._make_btn(quick_frame, "🚫 Excluir de Ruleta", _exclude_and_close, 
-                       color="#EF233C", hover="#D90429", px=20, py=6, font=self.f_small).grid(row=4, column=0, columnspan=2, pady=(5, 10))
-
-        def _confirm(event=None):
+        def _save_points(exclude=False):
             try:
                 pts = int(points_var.get())
-                self.db.add_points(student, pts, 
-                                   group_id=getattr(self.state, 'current_group_id', None),
-                                   group_name=getattr(self.state, 'current_group_name', None))
+                if pts != 0:
+                    self.db.add_points(student, pts, 
+                                       group_id=getattr(self.state, 'current_group_id', None),
+                                       group_name=getattr(self.state, 'current_group_name', None))
+                
+                if exclude:
+                    if not hasattr(self.state, 'excluded_students'):
+                        self.state.excluded_students = []
+                    if student not in self.state.excluded_students:
+                        self.state.excluded_students.append(student)
+                
                 win.destroy()
                 self.show_wheel_screen()
-                # Pequeño aviso visual
-                msg = f"{student}: {'+' if pts > 0 else ''}{pts} pts"
-                self.wheel_result_lbl.config(text=msg, fg="#00FF00" if pts >= 0 else "#FF4D4D")
+                
+                # Feedback visual
+                if exclude and pts != 0:
+                    msg = f"✅ {student}: {'+' if pts > 0 else ''}{pts} pts (Excluido)"
+                    color = "#00FF00"
+                elif exclude:
+                    msg = f"🚫 {student} Excluido"
+                    color = "#EF233C"
+                else:
+                    msg = f"✅ {student}: {'+' if pts > 0 else ''}{pts} pts"
+                    color = "#00FF00" if pts >= 0 else "#EF233C"
+                
+                self.wheel_result_lbl.config(text=msg, fg=color)
+                
             except ValueError:
                 messagebox.showerror("Error", "Ingresa un número válido.")
 
-        win.bind("<Return>", _confirm)
+        def _confirm_only_points():
+            _save_points(exclude=False)
+
+        def _confirm_and_exclude():
+            _save_points(exclude=True)
+
+        win.bind("<Return>", lambda e: _confirm_only_points())
         
         bottom_frame = tk.Frame(win, bg=BG_CARD)
         bottom_frame.pack(fill="both", expand=True, pady=(0, 20))
         
-        self._make_btn(bottom_frame, "Confirmar Puntos", _confirm, 
-                       color=BTN_PRIMARY, px=30, py=12).pack(pady=10)
+        self._make_btn(bottom_frame, "✅ Sumar Puntos y SEGUIR", _confirm_only_points, 
+                       color=BTN_PRIMARY, px=30, py=12).pack(pady=5)
+        
+        self._make_btn(bottom_frame, "🚫 Sumar Puntos y EXCLUIR", _confirm_and_exclude, 
+                       color="#EF233C", px=30, py=12).pack(pady=5)
+
+        self._make_btn(bottom_frame, "Solo Excluir (0 pts)", lambda: _save_points(exclude=True), 
+                       color="#6C757D", px=30, py=8, font=self.f_small).pack(pady=(15, 0))
 
     def _animate_wheel_spin(self, final_result, frame):
         """Anima el cambio de nombres tipo tómbola."""

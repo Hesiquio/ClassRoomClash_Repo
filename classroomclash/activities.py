@@ -28,6 +28,11 @@ class ActivitiesMixin:
         tk.Label(hdr, text=f"📋  ACTIVIDADES: {group_name.upper()}",
                  font=self.f_header, bg=BG_HEADER, fg=TEXT_LIGHT).pack()
 
+        # Botón Home en el header
+        home_btn_f = tk.Frame(hdr, bg=BG_HEADER)
+        home_btn_f.place(relx=0.03, rely=0.5, anchor="w")
+        self._make_btn(home_btn_f, "🏠 Inicio", self.show_main_menu, color="#4361EE", px=10, py=5, font=self.f_small).pack()
+
         help_msg = (
             "Control de Actividades.\n\n"
             "Registra el orden en que los alumnos terminan las tareas para motivar la competencia sana.\n\n"
@@ -92,11 +97,11 @@ class ActivitiesMixin:
                                color=BTN_PRIMARY, px=10, py=5, font=self.f_small).pack(side="left", padx=2)
                 
                 self._make_btn(btn_frame, "Ver Ranking", 
-                               lambda a=aid, n=name: self.show_activity_ranking(a, n),
+                               lambda a=aid, n=name, g=gid: self.show_activity_ranking(a, n, g),
                                color="#FF9F1C", px=10, py=5, font=self.f_small).pack(side="left", padx=2)
 
                 self._make_btn(btn_frame, "✏️", 
-                               lambda a=aid, n=name: self._edit_activity_dialog(a, n),
+                               lambda a=aid, n=name, g=gid: self._edit_activity_dialog(a, n, g),
                                color="#4361EE", px=8, py=5, font=self.f_small).pack(side="left", padx=2)
 
                 self._make_btn(btn_frame, "🗑️", 
@@ -161,6 +166,11 @@ class ActivitiesMixin:
         tk.Label(hdr, text=f"📥  REGISTRANDO: {activity_name}",
                  font=self.f_title, bg=BG_HEADER, fg=ACCENT_GOLD).pack()
 
+        # Botón Home en el header
+        home_btn_f = tk.Frame(hdr, bg=BG_HEADER)
+        home_btn_f.place(relx=0.03, rely=0.5, anchor="w")
+        self._make_btn(home_btn_f, "🏠 Inicio", self.show_main_menu, color="#4361EE", px=10, py=5, font=self.f_small).pack()
+
         body = tk.Frame(self.container, bg=BG_MAIN, padx=30, pady=20)
         body.pack(fill="both", expand=True)
 
@@ -172,10 +182,14 @@ class ActivitiesMixin:
         # Botones de navegación arriba
         bf = tk.Frame(body, bg=BG_MAIN, pady=10)
         bf.pack(fill="x")
-        self._make_btn(bf, "← Volver a Actividades", self.show_activities_menu,
-                       color="#6C757D", px=15, py=8).pack(side="left", padx=5)
-        self._make_btn(bf, "🏆 Ver Ranking Actual", lambda: self.show_activity_ranking(activity_id, activity_name),
-                       color="#FF9F1C", px=15, py=8).pack(side="left", padx=5)
+        self._make_btn(bf, "← Volver a Actividades", lambda: self.show_activities_menu(group_id),
+                       color="#6C757D", px=15, py=8, font=self.f_small).pack(side="left", padx=5)
+        self._make_btn(bf, "🏆 Ver Ranking Actual", lambda: self.show_activity_ranking(activity_id, activity_name, group_id),
+                       color="#FF9F1C", px=15, py=8, font=self.f_small).pack(side="left", padx=5)
+        
+        # Botón Home a la derecha
+        self._make_btn(bf, "🏠 Inicio", self.show_main_menu,
+                       color="#2B2D42", px=15, py=8, font=self.f_small).pack(side="right")
 
         students_list = group_data['students']
         tk.Label(body, text=f"Grupo: {group_data['name']} | Haz clic para marcar entrega:",
@@ -188,12 +202,16 @@ class ActivitiesMixin:
         scroll_frame.pack(fill="both", expand=True)
         grid_frame = scroll_frame.view
         
-        already_submitted = [r[0] for r in self.db.get_activity_ranking(activity_id)]
+        submissions_raw = self.db.get_activity_ranking(activity_id)
+        # submission_map: {nombre: posicion}
+        # submissions_raw trae (student_name, position, submitted_at, id)
+        submission_map = {row[0]: row[1] for row in submissions_raw}
 
         # Determinar columnas según ancho
         cols = 4 
         for i, student in enumerate(sorted(students_list)):
-            is_done = student in already_submitted
+            pos = submission_map.get(student)
+            is_done = pos is not None
             from .constants import PASTEL_COLORS
             
             # Color por defecto si no ha entregado
@@ -205,7 +223,7 @@ class ActivitiesMixin:
                 # Si ya entregó, usar un color pastel de la lista basado en su posición o índice
                 btn_color = PASTEL_COLORS[i % len(PASTEL_COLORS)]
                 text_color = TEXT_DARK
-                btn_text = f"✅ {student}"
+                btn_text = f"✅ #{pos} {student}"
             
             btn = self._make_btn(grid_frame, btn_text, None, color=btn_color, fg=text_color)
             btn.config(command=lambda b=btn, s=student, idx=i: self._mark_submission(activity_id, s, b, idx))
@@ -225,7 +243,7 @@ class ActivitiesMixin:
         else:
             messagebox.showinfo("Info", "Este alumno ya ha entregado.")
 
-    def show_activity_ranking(self, activity_id, activity_name):
+    def show_activity_ranking(self, activity_id, activity_name, group_id):
         """Muestra el orden de entrega de una actividad."""
         self._clear()
 
@@ -234,14 +252,28 @@ class ActivitiesMixin:
         tk.Label(hdr, text=f"🏆  RANKING: {activity_name}",
                  font=self.f_title, bg=BG_HEADER, fg=ACCENT_GOLD).pack()
 
+        # Botón Home en el header
+        home_btn_f = tk.Frame(hdr, bg=BG_HEADER)
+        home_btn_f.place(relx=0.03, rely=0.5, anchor="w")
+        self._make_btn(home_btn_f, "🏠 Inicio", self.show_main_menu, color="#4361EE", px=10, py=5, font=self.f_small).pack()
+
         body = tk.Frame(self.container, bg=BG_MAIN, padx=30, pady=20)
         body.pack(fill="both", expand=True)
 
         # Botón de navegación arriba
         bf_top = tk.Frame(body, bg=BG_MAIN, pady=10)
         bf_top.pack(fill="x")
-        self._make_btn(bf_top, "← Volver a Actividades", self.show_activities_menu,
-                       color="#6C757D", px=15, py=8).pack(side="left")
+        
+        self._make_btn(bf_top, "← Volver a Entregas", 
+                       lambda: self.show_submission_screen(activity_id, activity_name, group_id),
+                       color="#4361EE", px=15, py=8, font=self.f_small).pack(side="left", padx=(0, 10))
+        
+        self._make_btn(bf_top, "📋 Menú Actividades", lambda: self.show_activities_menu(group_id),
+                       color="#6C757D", px=15, py=8, font=self.f_small).pack(side="left")
+
+        # Botón Home a la derecha
+        self._make_btn(bf_top, "🏠 Inicio", self.show_main_menu,
+                       color="#2B2D42", px=15, py=8, font=self.f_small).pack(side="right")
 
         ranking = self.db.get_activity_ranking(activity_id)
 
@@ -281,33 +313,33 @@ class ActivitiesMixin:
                          font=self.f_small, bg=BG_CARD, fg=TEXT_MUTED).pack(side="left", expand=True)
                 
                 self._make_btn(info_row, "🗑️", 
-                               lambda s=sid, a=activity_id, n=activity_name: self._delete_submission_confirm(s, a, n),
+                               lambda s=sid, a=activity_id, n=activity_name, g=group_id: self._delete_submission_confirm(s, a, n, g),
                                color="#EF233C", hover="#D90429", px=4, py=1, font=self.f_small).pack(side="right", padx=2)
 
                 self._make_btn(info_row, "✏️", 
-                               lambda s=sid, t=time, a=activity_id, n=activity_name: self._edit_submission_time_dialog(s, t, a, n),
+                               lambda s=sid, t=time, a=activity_id, n=activity_name, g=group_id: self._edit_submission_time_dialog(s, t, a, n, g),
                                color="#6C757D", px=4, py=1, font=self.f_small).pack(side="right")
             
             for j in range(cols): sf_ranking.columnconfigure(j, weight=1)
 
-    def _edit_activity_dialog(self, activity_id, current_name):
+    def _edit_activity_dialog(self, activity_id, current_name, gid):
         new_name = simpledialog.askstring("Editar Actividad", "¿Nuevo nombre para la tarea?", initialvalue=current_name)
         if new_name and new_name != current_name:
             self.db.update_activity_name(activity_id, new_name)
-            self.show_activities_menu()
+            self.show_activities_menu(gid)
 
-    def _edit_submission_time_dialog(self, submission_id, current_time, aid, aname):
+    def _edit_submission_time_dialog(self, submission_id, current_time, aid, aname, gid):
         new_time = simpledialog.askstring("Editar Hora", "Formato YYYY-MM-DD HH:MM:SS", initialvalue=current_time)
         if new_time and new_time != current_time:
             self.db.update_submission_time(submission_id, new_time)
-            self.show_activity_ranking(aid, aname)
+            self.show_activity_ranking(aid, aname, gid)
 
     def _delete_activity_confirm(self, activity_id, target_group_id):
         if messagebox.askyesno("Confirmar", "⚠️ ¿Estás seguro de eliminar esta actividad y TODAS sus entregas?"):
             self.db.delete_activity(activity_id)
             self.show_activities_menu(target_group_id)
 
-    def _delete_submission_confirm(self, submission_id, activity_id, activity_name):
+    def _delete_submission_confirm(self, submission_id, activity_id, activity_name, group_id):
         if messagebox.askyesno("Confirmar", "¿Eliminar esta entrega? El alumno podrá registrarla nuevamente."):
             self.db.delete_submission(submission_id)
-            self.show_activity_ranking(activity_id, activity_name)
+            self.show_activity_ranking(activity_id, activity_name, group_id)
