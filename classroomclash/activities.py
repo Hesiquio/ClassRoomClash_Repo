@@ -1,5 +1,5 @@
 # =============================================================================
-#  clashroomclash/activities.py
+#  classroomclash/activities.py
 #  Control de entregas y ranking de actividades (Independiente del sorteo)
 # =============================================================================
 

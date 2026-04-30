@@ -20,7 +20,7 @@
 
 ## 🏗️ Arquitectura Modular (Código Fuente)
 
-El código se ubica dentro del paquete `clashroomclash/` y ha sido diseñado usando *mixins* para lograr una escalabilidad óptima y mantener la interfaz separada por dominios lógicos:
+El código se ubica dentro del paquete `classroomclash/` y ha sido diseñado usando *mixins* para lograr una escalabilidad óptima y mantener la interfaz separada por dominios lógicos:
 
 *   `app.py`: La clase principal (`ClassRoomClashApp`) que sirve como el contenedor maestro y estado general, inyectando todos los *mixins*. Aquí reside el diálogo global de ayuda contextual.
 *   `state.py`: Clase `AppState` que mantiene centralizado el estado efímero (alumnos cargados, nombre de grupo, etc.) desacoplado de la interfaz.
@@ -41,7 +41,7 @@ La herramienta está construida para correr en Windows de manera nativa sin inst
 ### Ejecutar desde Código:
 Asegúrate de tener Python instalado y ejecutar:
 ```bash
-python -m clashroomclash
+python -m classroomclash
 ```
 
 ### Empaquetado Automático:

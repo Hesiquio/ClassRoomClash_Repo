@@ -1,5 +1,5 @@
 # =============================================================================
-#  clashroomclash/app.py
+#  classroomclash/app.py
 #  Clase principal ClassRoomClashApp — ensambla los mixins de pantallas y lógica
 # =============================================================================
 

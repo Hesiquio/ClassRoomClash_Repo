@@ -1,4 +1,4 @@
-from clashroomclash.app import ClassRoomClashApp
+from classroomclash.app import ClassRoomClashApp
 
 if __name__ == "__main__":
     app = ClassRoomClashApp()

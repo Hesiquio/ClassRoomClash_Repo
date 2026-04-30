@@ -1,5 +1,5 @@
 # =============================================================================
-#  clashroomclash/sorteo_screen.py
+#  classroomclash/sorteo_screen.py
 #  Pantalla de sorteo con animación tipo tómbola (round-robin)
 # =============================================================================
 

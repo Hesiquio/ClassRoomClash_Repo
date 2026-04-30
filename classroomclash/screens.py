@@ -1,5 +1,5 @@
 # =============================================================================
-#  clashroomclash/screens.py
+#  classroomclash/screens.py
 #  Pantallas: Menú principal, Configuración, Grupos, Historial, Leaderboard
 # =============================================================================
 

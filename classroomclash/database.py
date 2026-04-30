@@ -1,5 +1,5 @@
 # =============================================================================
-#  clashroomclash/database.py
+#  classroomclash/database.py
 #  Gestor de base de datos SQLite para historial, grupos y leaderboard
 # =============================================================================
 

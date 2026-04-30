@@ -1,5 +1,5 @@
 # =============================================================================
-#  clashroomclash/constants.py
+#  classroomclash/constants.py
 #  Paleta de colores, emojis y colores de equipo — Flat Design Moderno
 # =============================================================================
 

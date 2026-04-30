@@ -1,9 +1,9 @@
 # =============================================================================
-#  clashroomclash/__main__.py
-#  Permite ejecutar el paquete directamente: python -m clashroomclash
+#  classroomclash/__main__.py
+#  Permite ejecutar el paquete directamente: python -m classroomclash
 # =============================================================================
 
-from clashroomclash.app import ClassRoomClashApp
+from classroomclash.app import ClassRoomClashApp
 
 if __name__ == "__main__":
     app = ClassRoomClashApp()
