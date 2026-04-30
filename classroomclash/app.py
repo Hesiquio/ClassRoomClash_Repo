@@ -3,6 +3,9 @@
 #  Clase principal ClassRoomClashApp — ensambla los mixins de pantallas y lógica
 # =============================================================================
 
+import os
+import sys
+import ctypes
 import tkinter as tk
 from tkinter import font as tkfont
 
@@ -32,6 +35,9 @@ class ClassRoomClashApp(ScreensMixin, SorteoScreenMixin, WheelMixin, ActivitiesM
         self.configure(bg=BG_MAIN)
         self.resizable(True, True)
         self.state('zoomed')  # Iniciar maximizado en Windows
+
+        # ── Configurar Icono ──────────────────────────────────────────────
+        self._set_app_icon()
 
         # ── Base de datos ─────────────────────────────────────────────────
         self.db = DatabaseManager()
@@ -90,3 +96,29 @@ class ClassRoomClashApp(ScreensMixin, SorteoScreenMixin, WheelMixin, ActivitiesM
         btn_area = tk.Frame(win, bg="#FFFFFF", pady=15)
         btn_area.pack(fill="x")
         self._make_btn(btn_area, "Entendido", win.destroy, color="#4361EE", px=30, py=10).pack()
+
+    def _set_app_icon(self):
+        """Establece el icono de la ventana y de la barra de tareas en Windows."""
+        try:
+            # 1. Hacer que Windows reconozca el App ID para la barra de tareas
+            myappid = 'hzl.classroomclash.v1' 
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+        except:
+            pass
+
+        try:
+            # 2. Localizar el icono
+            if getattr(sys, 'frozen', False):
+                # Si es un ejecutable (PyInstaller)
+                base_path = sys._MEIPASS
+            else:
+                # Si corre como script
+                base_path = os.path.dirname(os.path.dirname(__file__))
+            
+            icon_path = os.path.join(base_path, "classroom_clash_icon.png")
+            
+            if os.path.exists(icon_path):
+                icon_img = tk.PhotoImage(file=icon_path)
+                self.iconphoto(True, icon_img)
+        except Exception as e:
+            print(f"No se pudo cargar el icono: {e}")
