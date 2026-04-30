@@ -727,9 +727,12 @@ class ScreensMixin:
             
             cb = tk.Checkbutton(self.scrollable_names, text=student, variable=var, 
                                font=self.f_small, bg=BG_CARD, activebackground=BG_CARD,
-                               fg=TEXT_DARK, selectcolor=BG_HEADER, cursor="hand2",
+                               fg=TEXT_DARK, selectcolor="white", cursor="hand2",
                                command=self._refresh_present_count)
             cb.grid(row=i // cols, column=i % cols, sticky="w", padx=10, pady=2)
+            
+            # Soporte para scroll con la rueda del ratón
+            cb.bind("<MouseWheel>", lambda e: self.scrollable_names.master.yview_scroll(int(-1*(e.delta/120)), "units"))
 
         self.lbl_present = tk.Label(info_card, text=f"Alumnos presentes: {len(self.state.students)}", 
                                     font=self.f_small, bg=BG_CARD, fg=BTN_PRIMARY)
