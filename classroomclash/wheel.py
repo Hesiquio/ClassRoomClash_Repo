@@ -47,7 +47,14 @@ class WheelMixin:
         tk.Label(hdr, text="🎡  TÓMBOLA CLASH",
                  font=self.f_header, bg=BG_HEADER, fg=ACCENT_GOLD).pack()
 
-        help_msg = "Tómbola de Participación.\n\nEsta pantalla sirve para elegir alumnos al azar para participar.\n\n- Gira la tómbola para elegir un alumno.\n- Asigna puntos por respuestas correctas o incorrectas.\n- Usa '0 Pts' solo para registrar que participaron sin afectar calificación.\n- Puedes excluir a los ausentes tocando 'Excluir / Reintegrar' en la lista lateral."
+        help_msg = (
+            "Tómbola de Participación.\n\n"
+            "Elige alumnos al azar para participar y gamifica la clase.\n\n"
+            "- 🎡 Girar: Selecciona un alumno aleatorio de la lista.\n"
+            "- ⭐ Asignar Puntos: Al terminar el giro, aparecerá un diálogo para sumar o restar puntos.\n"
+            "- 🚫 Excluir: Usa el botón 'Excluir / Reintegrar' para marcar alumnos que no vinieron hoy.\n\n"
+            "Los puntos acumulados son globales y se pueden consultar en el Leaderboard."
+        )
         help_btn = tk.Frame(hdr, bg=BG_HEADER)
         help_btn.place(relx=0.97, rely=0.5, anchor="e")
         self._make_btn(help_btn, "❓ Ayuda", lambda: self._show_help_dialog("Tómbola de Participación", help_msg), color="#4361EE", px=10, py=5, font=self.f_small).pack()

@@ -28,7 +28,14 @@ class ActivitiesMixin:
         tk.Label(hdr, text=f"📋  ACTIVIDADES: {group_name.upper()}",
                  font=self.f_header, bg=BG_HEADER, fg=TEXT_LIGHT).pack()
 
-        help_msg = "Control de Actividades.\n\nAquí puedes crear tareas o actividades para llevar un registro del orden en que los alumnos las terminan.\n\n- Usa 'Registrar Entregas' durante la clase para ir marcando a los alumnos conforme acaben.\n- Usa 'Ver Ranking' para ver la clasificación final y editar tiempos si fue necesario."
+        help_msg = (
+            "Control de Actividades.\n\n"
+            "Registra el orden en que los alumnos terminan las tareas para motivar la competencia sana.\n\n"
+            "- 📥 Registrar Entregas: Haz clic en cada alumno conforme terminen para asignar su posición.\n"
+            "- 🏆 Ver Ranking: Consulta la tabla de posiciones de la actividad actual.\n"
+            "- ✏️ Editar/🗑️ Eliminar: Gestiona las actividades creadas.\n\n"
+            "Los resultados de estas actividades se pueden exportar a Excel desde el Panel del Grupo."
+        )
         help_btn = tk.Frame(hdr, bg=BG_HEADER)
         help_btn.place(relx=0.97, rely=0.5, anchor="e")
         self._make_btn(help_btn, "❓ Ayuda", lambda: self._show_help_dialog("Control de Actividades", help_msg), color="#4361EE", px=10, py=5, font=self.f_small).pack()

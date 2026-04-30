@@ -57,21 +57,36 @@ class ClassRoomClashApp(ScreensMixin, SorteoScreenMixin, WheelMixin, ActivitiesM
         """Muestra un cuadro de diálogo con información y contexto sobre la vista actual."""
         win = tk.Toplevel(self)
         win.title(f"Ayuda: {title}")
-        win.geometry("500x350")
+        win.geometry("550x550")
         win.configure(bg="#FFFFFF")
         win.transient(self)
         win.grab_set()
 
+        # Centrar ventana
         win.update_idletasks()
-        w, h = 500, 350
+        w, h = 550, 550
         x = self.winfo_x() + (self.winfo_width() // 2) - (w // 2)
         y = self.winfo_y() + (self.winfo_height() // 2) - (h // 2)
-        win.geometry(f"+{x}+{y}")
+        win.geometry(f"{w}x{h}+{x}+{y}")
 
         tk.Label(win, text=f"ℹ️ {title}", font=self.f_title, bg="#FFFFFF", fg="#2B2D42", pady=15).pack(fill="x")
 
-        msg_lbl = tk.Label(win, text=message, font=self.f_body, bg="#FFFFFF", fg="#495057", 
-                           justify="left", wraplength=450, anchor="nw")
-        msg_lbl.pack(fill="both", expand=True, padx=25, pady=10)
+        # Contenedor para el texto con scroll
+        txt_frame = tk.Frame(win, bg="#FFFFFF")
+        txt_frame.pack(fill="both", expand=True, padx=25)
 
-        self._make_btn(win, "Entendido", win.destroy, color="#4361EE", px=20, py=10).pack(pady=20)
+        scrollbar = tk.Scrollbar(txt_frame)
+        scrollbar.pack(side="right", fill="y")
+
+        # Usamos un widget Text para mejor manejo de contenido largo y scroll
+        txt = tk.Text(txt_frame, font=self.f_body, bg="#FFFFFF", fg="#495057", 
+                      relief="flat", wrap="word", yscrollcommand=scrollbar.set,
+                      padx=10, pady=10)
+        txt.insert("1.0", message)
+        txt.config(state="disabled") # Solo lectura
+        txt.pack(fill="both", expand=True)
+        scrollbar.config(command=txt.yview)
+
+        btn_area = tk.Frame(win, bg="#FFFFFF", pady=15)
+        btn_area.pack(fill="x")
+        self._make_btn(btn_area, "Entendido", win.destroy, color="#4361EE", px=30, py=10).pack()

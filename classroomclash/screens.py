@@ -86,7 +86,16 @@ class ScreensMixin:
         tk.Label(hdr, text="Tus Grupos y Herramientas",
                  font=self.f_small, bg=BG_HEADER, fg=TEXT_MUTED).pack(pady=(3, 0))
 
-        help_msg = "Bienvenido a ClassRoom Clash.\n\nEn esta pantalla puedes administrar tus grupos escolares. Cada grupo es un espacio separado con sus propios alumnos, historial de puntos, y actividades.\n\nAcciones:\n- Crea grupos nuevos arriba.\n- Gestiona un grupo existente para abrir sorteos, ruletas o tareas.\n- Accede al historial global al final de la pantalla."
+        help_msg = (
+            "Bienvenido a ClassRoom Clash.\n\n"
+            "En esta pantalla puedes administrar tus grupos escolares. Cada grupo es un espacio separado con sus propios alumnos, historial de puntos, y actividades.\n\n"
+            "Acciones:\n"
+            "- ➕ Crear Nuevo Grupo: Inicia un grupo desde cero o pegando una lista.\n"
+            "- 📦 Archivar: Si ya no usas un grupo, archívalo para limpiar la vista. Puedes recuperarlo marcando 'Mostrar Archivados'.\n"
+            "- ✏️ Renombrar: Cambia el nombre de cualquier grupo.\n"
+            "- 🗑️ Eliminar: Borra el grupo y todo su historial de forma permanente.\n\n"
+            "Al final encontrarás el Historial Global y el Leaderboard con los mejores puntajes de todos tus grupos."
+        )
         help_btn = tk.Frame(hdr, bg=BG_HEADER)
         help_btn.place(relx=0.97, rely=0.5, anchor="e")
         self._make_btn(help_btn, "❓ Ayuda", lambda: self._show_help_dialog("Menú Principal", help_msg), color="#4361EE", px=10, py=5, font=self.f_small).pack()
@@ -182,7 +191,17 @@ class ScreensMixin:
         tk.Label(hdr, text=f"📂  GRUPO: {data['name']}",
                  font=self.f_header, bg=BG_HEADER, fg=TEXT_LIGHT).pack()
 
-        help_msg = "Panel de Control del Grupo.\n\nEste es el centro de mando. Desde aquí puedes interactuar de múltiples formas con tu clase:\n\n1. Sorteo: Forma equipos balanceados al instante.\n2. Tómbola: Elige alumnos al azar para responder.\n3. Actividades: Registra el orden en que los alumnos terminan tareas.\n4. Leaderboard: Mira quién lleva más puntos."
+        help_msg = (
+            "Panel de Control del Grupo.\n\n"
+            "Este es el centro de mando para el grupo seleccionado. Tienes 4 herramientas principales:\n\n"
+            "1. 🎲 Sorteo: Crea equipos balanceados al azar con animaciones tipo Champions.\n"
+            "2. 🎡 Tómbola: Elige alumnos al azar para participar y asígnales puntos.\n"
+            "3. 📋 Actividades: Registra el orden de entrega de tareas en tiempo real.\n"
+            "4. 🏆 Ranking: Mira el progreso de puntos de este grupo específico.\n\n"
+            "Otras opciones:\n"
+            "- 📊 Descargar Reporte Excel: Genera un informe profesional con puntos y resultados de actividades.\n"
+            "- ✏️ Editar Alumnos: Agrega o quita integrantes del grupo actual."
+        )
         help_btn = tk.Frame(hdr, bg=BG_HEADER)
         help_btn.place(relx=0.97, rely=0.5, anchor="e")
         self._make_btn(help_btn, "❓ Ayuda", lambda: self._show_help_dialog("Dashboard del Grupo", help_msg), color="#4361EE", px=10, py=5, font=self.f_small).pack()

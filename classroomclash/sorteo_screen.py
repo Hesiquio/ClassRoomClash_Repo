@@ -50,7 +50,14 @@ class SorteoScreenMixin:
         )
         self.lbl_progress.pack(side="left", padx=24)
 
-        help_msg = "Sorteo Estilo Champions League.\n\nAquí los alumnos se distribuyen aleatoriamente en los equipos configurados.\n\nModos:\n- Modo Auto: Los alumnos se asignan automáticamente a los equipos cada 2 segundos.\n- Modo Manual: Haz clic para revelar paso a paso el equipo y luego el alumno."
+        help_msg = (
+            "Sorteo Estilo Champions League.\n\n"
+            "Aquí los alumnos se distribuyen aleatoriamente en los equipos configurados.\n\n"
+            "Modos:\n"
+            "- ⚡ Modo Auto: Los alumnos se asignan automáticamente cada 2 segundos.\n"
+            "- 🔮 Modo Manual: Haz clic para revelar paso a paso.\n\n"
+            "Nota: Al finalizar, el resultado se guarda automáticamente en el Historial Global para consulta futura."
+        )
         help_btn = tk.Frame(hdr, bg=BG_HEADER)
         help_btn.place(relx=0.97, rely=0.5, anchor="e")
         self._make_btn(help_btn, "❓ Ayuda", lambda: self._show_help_dialog("Sorteo de Equipos", help_msg), color="#4361EE", px=10, py=5, font=self.f_small).pack()
