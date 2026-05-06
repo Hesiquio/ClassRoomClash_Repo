@@ -161,22 +161,24 @@ class ScreensMixin:
                 self._make_btn(bc, "🗑️", lambda gid=group_id: self._delete_group_confirm(gid),
                                color="#EF233C", px=10, py=6, font=self.f_small).pack(side="left", padx=3)
 
-        # Footer Global
         tk.Label(body, text="Herramientas Globales",
                  font=self.f_small, bg=BG_MAIN, fg=TEXT_MUTED).pack(pady=(25, 10))
 
         grid_cols = tk.Frame(body, bg=BG_MAIN)
         grid_cols.pack(fill="x")
-        grid_cols.columnconfigure((0, 1, 2), weight=1)
+        grid_cols.columnconfigure((0, 1, 2, 3), weight=1)
+
+        self._make_btn(grid_cols, "🎰 Tómbola\nde Equipos", self.show_team_raffle_screen,
+                       color="#7B2FBE", hover="#6A1FA3", px=10, py=8).grid(row=0, column=0, padx=5, sticky="ew")
 
         self._make_btn(grid_cols, "📊 Historial", self.show_history,
-                       color="#FF9F1C", px=10, py=8).grid(row=0, column=0, padx=5, sticky="ew")
+                       color="#FF9F1C", px=10, py=8).grid(row=0, column=1, padx=5, sticky="ew")
 
         self._make_btn(grid_cols, "🏆 Leaderboard", self.show_leaderboard,
-                       color="#FFD60A", px=10, py=8).grid(row=0, column=1, padx=5, sticky="ew")
+                       color="#FFD60A", px=10, py=8).grid(row=0, column=2, padx=5, sticky="ew")
 
         self._make_btn(grid_cols, "❌ Salir", self.quit,
-                       color="#6C757D", px=10, py=8).grid(row=0, column=2, padx=5, sticky="ew")
+                       color="#6C757D", px=10, py=8).grid(row=0, column=3, padx=5, sticky="ew")
 
 
     def show_group_dashboard(self, group_id):
