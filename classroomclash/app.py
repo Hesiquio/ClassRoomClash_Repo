@@ -15,16 +15,19 @@ from .screens import ScreensMixin
 from .sorteo_screen import SorteoScreenMixin
 from .wheel import WheelMixin
 from .activities import ActivitiesMixin
+from .team_raffle_screen import TeamRaffleMixin
 from .state import AppState
 
 
-class ClassRoomClashApp(ScreensMixin, SorteoScreenMixin, WheelMixin, ActivitiesMixin, tk.Tk):
+class ClassRoomClashApp(ScreensMixin, SorteoScreenMixin, WheelMixin, ActivitiesMixin, TeamRaffleMixin, tk.Tk):
     """
     Ventana raíz de la aplicación.
     Hereda de los mixins para mantener cada módulo enfocado:
       - ScreensMixin      → menú, config, grupos, historial, leaderboard
       - SorteoScreenMixin → pantalla de sorteo y animación de tómbola
       - WheelMixin        → pantalla y animación de la ruleta de puntos
+      - ActivitiesMixin   → control de actividades y entregas
+      - TeamRaffleMixin   → tómbola de equipos (orden de participación)
     """
 
     def __init__(self):
